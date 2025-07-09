@@ -183,20 +183,39 @@ curl https://yourusername.pythonanywhere.com/api/v1
 
 ### **Common Issues**
 
+#### **🔥 FIXED: Gunicorn AppImportError**
+**Error:** `Failed to find attribute 'app' in 'wsgi'`
+**Solution:** ✅ **Already fixed in latest version!**
+- Updated `wsgi.py` to include both `app` and `application` objects
+- If you still get this error, make sure you've pushed the latest code to GitHub
+
 #### **502 Bad Gateway**
 - ✅ Check if `gunicorn wsgi:app` command is correct
 - ✅ Verify all environment variables are set
 - ✅ Check logs for Python errors
+- ✅ Ensure your GitHub repository has the latest code
 
 #### **Database Connection Error**
 - ✅ Verify `DATABASE_URL` is correctly set
 - ✅ Ensure database was created properly
 - ✅ Check database credentials
+- ✅ For Render: Use "Internal Database URL" not external URL
 
 #### **Import Errors**
 - ✅ Verify `requirements.txt` includes all dependencies
 - ✅ Check Python version compatibility
 - ✅ Ensure virtual environment is activated
+- ✅ Make sure you've pushed all files to GitHub
+
+#### **Environment Variables Not Set**
+- ✅ Double-check all required environment variables are added:
+  ```bash
+  FLASK_ENV=production
+  DEBUG=False
+  SECRET_KEY=your-generated-secret-key
+  JWT_SECRET_KEY=your-generated-jwt-key
+  DATABASE_URL=your-database-url
+  ```
 
 ### **Getting Help**
 - **Render**: [render.com/docs](https://render.com/docs)
