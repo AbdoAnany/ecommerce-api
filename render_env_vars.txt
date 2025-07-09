@@ -1,0 +1,7 @@
+# Render Environment Variables
+FLASK_ENV=production
+DEBUG=False
+SECRET_KEY=t8_yhiC7NCXaRy_cTehEUo5r54RUuq3yoibuzOMN5-4
+JWT_SECRET_KEY=w6lBZRztm7O-WUk6tdAhFbR0fK1TtCRvO-SZBTyG0yY
+
+# Copy these to your Render service environment variables
