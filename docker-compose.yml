@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=mysql+pymysql://ecommerce:password@db:3306/ecommerce
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - JWT_SECRET_KEY=dev-jwt-secret-change-in-production
+    volumes:
+      - .:/app
+      - uploads:/app/static/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ecommerce-network
+
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=ecommerce
+      - MYSQL_USER=ecommerce
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - ecommerce-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=ecommerce
+      - PMA_PASSWORD=password
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - ecommerce-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploads:
+
+networks:
+  ecommerce-network:
+    driver: bridge

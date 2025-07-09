@@ -1,0 +1,38 @@
+{
+  "name": "E-commerce API",
+  "description": "A comprehensive Flask e-commerce backend API with JWT authentication, product management, and admin dashboard.",
+  "repository": "https://github.com/yourusername/ecommerce_api",
+  "keywords": ["flask", "python", "ecommerce", "api", "jwt", "postgresql"],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for Flask sessions",
+      "generator": "secret"
+    },
+    "JWT_SECRET_KEY": {
+      "description": "Secret key for JWT tokens",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Debug mode",
+      "value": "False"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    "heroku-postgresql:essential-0"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
