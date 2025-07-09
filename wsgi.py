@@ -10,7 +10,10 @@ sys.path.insert(0, project_root)
 from app import create_app
 
 # Create the Flask application
-application = create_app(os.getenv('FLASK_ENV', 'production'))
+app = create_app(os.getenv('FLASK_ENV', 'production'))
+
+# For compatibility with different deployment platforms
+application = app
 
 if __name__ == "__main__":
-    application.run()
+    app.run()
