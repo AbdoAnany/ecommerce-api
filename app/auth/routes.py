@@ -3,6 +3,7 @@ from flask_jwt_extended import (
     create_access_token, create_refresh_token, 
     jwt_required, get_jwt_identity, get_jwt
 )
+from marshmallow import ValidationError
 from datetime import datetime, timezone, timedelta
 from app.auth import bp
 from app.auth.schemas import (
@@ -22,8 +23,10 @@ def register():
     
     try:
         data = schema.load(request.get_json())
-    except Exception as e:
+    except ValidationError as e:
         return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
+    except Exception as e:
+        return jsonify({'error': 'Database error', 'details': str(e)}), 500
     
     # Create new user
     user = User(

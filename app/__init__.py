@@ -67,6 +67,10 @@ def create_app(config_name=None):
     from app.shipping import bp as shipping_bp
     app.register_blueprint(shipping_bp, url_prefix='/api/v1/shipping')
     
+    # Setup and health endpoints
+    from app.setup import setup_bp
+    app.register_blueprint(setup_bp)
+    
     # Health check endpoint
     @app.route('/ping')
     def ping():
