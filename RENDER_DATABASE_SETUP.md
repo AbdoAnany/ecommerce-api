@@ -5,11 +5,13 @@
 ### **Step 1: Create PostgreSQL Database**
 
 1. **In your Render Dashboard:**
+
    ```
    🏠 Dashboard → [+ New] Button → PostgreSQL
    ```
 
 2. **Fill Database Details:**
+
    ```
    📝 Name: ecommerce-db
    📍 Region: Oregon (US West) - choose closest to you
@@ -26,17 +28,19 @@
 ### **Step 2: Get Internal Database URL**
 
 1. **Click on your Database:**
+
    ```
    📊 Dashboard → ecommerce-db (click the database name)
    ```
 
 2. **In Database Dashboard, find "Connections" section:**
+
    ```
    You'll see several URLs:
-   
+
    🔗 External Database URL: postgresql://user:pass@host.com:5432/db
    🏠 Internal Database URL: postgresql://user:pass@dpg-xxxxx-a:5432/db
-   
+
    ⚠️  IMPORTANT: Use the INTERNAL URL (starts with dpg-)
    ```
 
@@ -53,22 +57,25 @@
 ### **Step 3: Add to Web Service**
 
 1. **Go to Your Web Service:**
+
    ```
    📊 Dashboard → ecommerce-api (your web service)
    ```
 
 2. **Navigate to Environment Tab:**
+
    ```
    Left sidebar: Environment 🌍
    ```
 
 3. **Add Environment Variable:**
+
    ```
    Click: [+ Add Environment Variable]
-   
+
    Key: DATABASE_URL
    Value: [Paste the Internal Database URL here]
-   
+
    Example:
    Key: DATABASE_URL
    Value: postgresql://ecommerce_user:abc123xyz@dpg-ch1234567-a:5432/ecommerce_db_xyz
@@ -84,6 +91,7 @@
 ### **Step 4: Verify Connection**
 
 1. **Your Environment Variables should now include:**
+
    ```bash
    FLASK_ENV=production
    DEBUG=False
@@ -93,6 +101,7 @@
    ```
 
 2. **Deploy/Redeploy:**
+
    - Render will automatically redeploy when you add environment variables
    - Or click **"Manual Deploy"** if needed
 
@@ -106,13 +115,16 @@
 ## 🔍 **Common Issues & Solutions**
 
 ### **🔥 CRITICAL: Python 3.13 Compatibility Issue**
+
 **Error:** `ImportError: undefined symbol: _PyInterpreterState_Get` with psycopg2
 **Solution:** ✅ **Already fixed in latest version!**
+
 - Updated requirements.txt with compatible package versions
 - Specified Python 3.11 in render.yaml
 - Added .python-version file
 
 **If you still get this error:**
+
 1. Make sure you've pushed the latest code to GitHub
 2. In Render, go to Settings → Environment and add:
    ```
@@ -121,22 +133,28 @@
 3. Redeploy manually
 
 ### **❌ Wrong Database URL**
+
 ```
 🚫 External URL: postgresql://user:pass@host.render.com:5432/db
 ✅ Internal URL:  postgresql://user:pass@dpg-xxxxx-a:5432/db
 ```
+
 **Why Internal?** Web services and databases on Render communicate internally for better performance and security.
 
 ### **❌ Database Not Found**
+
 ```
 Error: database "xyz" does not exist
 ```
+
 **Solution:** Make sure database creation completed (status: "Available")
 
 ### **❌ Connection Timeout**
+
 ```
 Error: could not connect to server
 ```
+
 **Solution:** Verify you copied the complete Internal Database URL
 
 ---
@@ -156,7 +174,7 @@ After setup, your Render environment should have:
 
 ```bash
 ✅ FLASK_ENV=production
-✅ DEBUG=False  
+✅ DEBUG=False
 ✅ SECRET_KEY=your-generated-secret-key
 ✅ JWT_SECRET_KEY=your-generated-jwt-key
 ✅ DATABASE_URL=postgresql://user:pass@dpg-xxxxx-a:5432/db_name
