@@ -3,7 +3,8 @@ services:
     name: ecommerce-api
     env: python
     plan: free
-    runtime: python-3.11
+    # Note: Render may automatically use Python 3.13
+    # Our requirements.txt is now compatible with Python 3.13
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app
     envVars:

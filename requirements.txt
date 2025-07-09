@@ -13,5 +13,6 @@ email-validator==2.2.0
 python-dateutil==2.9.0
 Werkzeug==3.0.3
 PyMySQL==1.1.1
-psycopg2-binary==2.9.10
+# Use psycopg3 for better Python 3.13 compatibility
+psycopg[binary]==3.1.19
 gunicorn==22.0.0
