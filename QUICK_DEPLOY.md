@@ -5,11 +5,13 @@ Your E-commerce API is ready to deploy! Here are your options:
 ## 🎯 Recommended: Railway (Easiest)
 
 **1-Click Setup:**
+
 ```bash
 ./deploy_railway.sh
 ```
 
 **Manual Steps:**
+
 1. Install Railway CLI: `npm install -g @railway/cli`
 2. Run: `railway login`
 3. Run: `railway init`
@@ -17,6 +19,7 @@ Your E-commerce API is ready to deploy! Here are your options:
 5. Run: `railway up`
 
 **Advantages:**
+
 - ✅ Free PostgreSQL database included
 - ✅ Automatic HTTPS
 - ✅ Environment variables auto-managed
@@ -28,17 +31,20 @@ Your E-commerce API is ready to deploy! Here are your options:
 ## 🌟 Alternative: Heroku (Classic)
 
 **1-Click Setup:**
+
 ```bash
 ./deploy_heroku.sh
 ```
 
 **Manual Steps:**
+
 1. Install Heroku CLI
 2. Run: `heroku create your-app-name`
 3. Run: `heroku addons:create heroku-postgresql`
 4. Run: `git push heroku main`
 
 **Advantages:**
+
 - ✅ Well-established platform
 - ✅ Free PostgreSQL database
 - ✅ Extensive documentation
@@ -48,12 +54,12 @@ Your E-commerce API is ready to deploy! Here are your options:
 
 ## 🎨 Other Options
 
-| Platform | Setup Time | Complexity | Free Tier |
-|----------|------------|------------|-----------|
-| **Render** | 5 minutes | Easy | ✅ Yes |
-| **PythonAnywhere** | 10 minutes | Medium | ✅ Yes |
-| **DigitalOcean** | 15 minutes | Medium | ❌ $5/month |
-| **AWS/Google Cloud** | 30+ minutes | Hard | ⚠️ Credits |
+| Platform             | Setup Time  | Complexity | Free Tier   |
+| -------------------- | ----------- | ---------- | ----------- |
+| **Render**           | 5 minutes   | Easy       | ✅ Yes      |
+| **PythonAnywhere**   | 10 minutes  | Medium     | ✅ Yes      |
+| **DigitalOcean**     | 15 minutes  | Medium     | ❌ $5/month |
+| **AWS/Google Cloud** | 30+ minutes | Hard       | ⚠️ Credits  |
 
 ---
 
@@ -99,11 +105,13 @@ DATABASE_URL=<auto-provided>
 ## 📞 Quick Help
 
 **Common Issues:**
+
 - **502 Error**: App not binding to PORT (check railway.py/wsgi.py)
 - **Database Error**: DATABASE_URL not set correctly
 - **Authentication Error**: Check SECRET_KEY and JWT_SECRET_KEY
 
 **Get Support:**
+
 - Check platform-specific logs
 - Verify environment variables
 - Test locally first with `python app.py`
@@ -125,6 +133,7 @@ Choose your platform and run the deployment script:
 Your API will be live in under 5 minutes! 🚀
 
 **Next Steps:**
+
 1. Share your deployed API URL
 2. Test with the Postman collection
 3. Build your frontend app

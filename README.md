@@ -6,12 +6,12 @@ A comprehensive, scalable e-commerce backend API built with Flask, SQLAlchemy, a
 
 **Ready to deploy in 5 minutes!** Choose your preferred platform:
 
-| Platform | Deployment | Database | Cost |
-|----------|------------|----------|------|
-| 🚂 **[Railway](https://railway.app)** | `./deploy_railway.sh` | PostgreSQL | Free tier |
-| 🌟 **[Heroku](https://heroku.com)** | `./deploy_heroku.sh` | PostgreSQL | Free tier |
-| 🎨 **[Render](https://render.com)** | One-click deploy | PostgreSQL | Free tier |
-| 🐍 **[PythonAnywhere](https://pythonanywhere.com)** | Manual setup | MySQL | Free tier |
+| Platform                                            | Deployment            | Database   | Cost      |
+| --------------------------------------------------- | --------------------- | ---------- | --------- |
+| 🚂 **[Railway](https://railway.app)**               | `./deploy_railway.sh` | PostgreSQL | Free tier |
+| 🌟 **[Heroku](https://heroku.com)**                 | `./deploy_heroku.sh`  | PostgreSQL | Free tier |
+| 🎨 **[Render](https://render.com)**                 | One-click deploy      | PostgreSQL | Free tier |
+| 🐍 **[PythonAnywhere](https://pythonanywhere.com)** | Manual setup          | MySQL      | Free tier |
 
 **📖 [See Full Deployment Guide](DEPLOYMENT_GUIDE.md)**
 
@@ -364,4 +364,5 @@ All API responses follow this format:
 This is a production-ready e-commerce API backend with comprehensive features and clean architecture. The codebase follows Flask best practices and is designed for scalability and maintainability.
 
 For questions or customizations, refer to the inline code documentation and Flask official documentation.
+
 # ecommerce-api

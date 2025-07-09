@@ -4,14 +4,14 @@ This guide covers multiple deployment options for your Flask e-commerce API with
 
 ## 📋 Deployment Options Overview
 
-| Platform | Database | Difficulty | Cost | Best For |
-|----------|----------|------------|------|----------|
-| **Railway** | PostgreSQL/MySQL | Easy | Free tier available | Modern platform |
-| **Heroku** | PostgreSQL | Easy | Free tier available | Quick deployment |
-| **PythonAnywhere** | MySQL | Easy | Free tier available | Python-focused |
-| **Render** | PostgreSQL | Easy | Free tier available | Modern alternative |
-| **DigitalOcean** | Managed Database | Medium | $5+/month | Production apps |
-| **AWS** | RDS | Hard | Pay-as-you-go | Enterprise |
+| Platform           | Database         | Difficulty | Cost                | Best For           |
+| ------------------ | ---------------- | ---------- | ------------------- | ------------------ |
+| **Railway**        | PostgreSQL/MySQL | Easy       | Free tier available | Modern platform    |
+| **Heroku**         | PostgreSQL       | Easy       | Free tier available | Quick deployment   |
+| **PythonAnywhere** | MySQL            | Easy       | Free tier available | Python-focused     |
+| **Render**         | PostgreSQL       | Easy       | Free tier available | Modern alternative |
+| **DigitalOcean**   | Managed Database | Medium     | $5+/month           | Production apps    |
+| **AWS**            | RDS              | Hard       | Pay-as-you-go       | Enterprise         |
 
 ---
 
@@ -20,14 +20,17 @@ This guide covers multiple deployment options for your Flask e-commerce API with
 Railway is modern, has great Python support, and provides both app hosting and database.
 
 ### Step 1: Setup Railway Account
+
 1. Go to [railway.app](https://railway.app)
 2. Sign up with GitHub
 3. Install Railway CLI: `npm install -g @railway/cli`
 
 ### Step 2: Prepare Your Project
+
 Already done! Your project includes:
+
 - ✅ `requirements.txt`
-- ✅ `Dockerfile` 
+- ✅ `Dockerfile`
 - ✅ `railway.py` (entry point)
 - ✅ Environment configuration
 
@@ -53,6 +56,7 @@ railway up
 ```
 
 ### Step 4: Setup Database
+
 ```bash
 # Connect to your Railway database and run migrations
 railway shell
@@ -61,6 +65,7 @@ python create_sample_data.py
 ```
 
 **Railway automatically provides:**
+
 - Free PostgreSQL database
 - Environment variables for database connection
 - HTTPS SSL certificates
@@ -71,10 +76,12 @@ python create_sample_data.py
 ## 🌟 Option 2: Heroku (Classic Choice)
 
 ### Step 1: Setup Heroku
+
 1. Install [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 2. Create account at [heroku.com](https://heroku.com)
 
 ### Step 2: Create Heroku App
+
 ```bash
 # Login to Heroku
 heroku login
@@ -92,12 +99,14 @@ heroku config:set JWT_SECRET_KEY="your-jwt-secret-key-here"
 ```
 
 ### Step 3: Create Procfile
+
 ```bash
 echo "web: gunicorn wsgi:app" > Procfile
 echo "release: python deploy.py" >> Procfile
 ```
 
 ### Step 4: Deploy
+
 ```bash
 # Initialize git (if not already)
 git init
@@ -117,11 +126,13 @@ heroku run python create_sample_data.py
 ## 💻 Option 3: PythonAnywhere (Python-Focused)
 
 ### Step 1: Setup Account
+
 1. Go to [pythonanywhere.com](https://pythonanywhere.com)
 2. Sign up for free account
 3. Open a Bash console
 
 ### Step 2: Upload Your Code
+
 ```bash
 # Clone your repository or upload files
 git clone https://github.com/yourusername/ecommerce_api.git
@@ -134,6 +145,7 @@ pip install -r requirements.txt
 ```
 
 ### Step 3: Setup Database
+
 ```bash
 # PythonAnywhere provides MySQL
 # Update your config.py to use MySQL instead of SQLite
@@ -142,6 +154,7 @@ CREATE DATABASE ecommerce_db;
 ```
 
 ### Step 4: Configure Web App
+
 1. Go to Web tab in PythonAnywhere dashboard
 2. Create new web app
 3. Choose Flask framework
@@ -153,21 +166,25 @@ CREATE DATABASE ecommerce_db;
 ## 🚀 Option 4: Render (Modern Alternative)
 
 ### Step 1: Setup Render
+
 1. Go to [render.com](https://render.com)
 2. Connect your GitHub account
 3. Create new Web Service
 
 ### Step 2: Configure Service
+
 - **Repository**: Connect your GitHub repo
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `gunicorn wsgi:app`
 - **Environment**: Python 3.11
 
 ### Step 3: Add Database
+
 1. Create PostgreSQL database on Render
 2. Copy connection string to environment variables
 
 ### Step 4: Set Environment Variables
+
 ```
 FLASK_ENV=production
 SECRET_KEY=your-secret-key
@@ -180,17 +197,20 @@ DATABASE_URL=postgresql://... (from Render database)
 ## ☁️ Option 5: DigitalOcean App Platform
 
 ### Step 1: Setup DigitalOcean
+
 1. Create account at [digitalocean.com](https://digitalocean.com)
 2. Go to App Platform
 3. Create new app from GitHub repository
 
 ### Step 2: Configure App
+
 - **Source**: GitHub repository
 - **Plan**: Basic ($5/month)
 - **Build Command**: `pip install -r requirements.txt`
 - **Run Command**: `gunicorn wsgi:app`
 
 ### Step 3: Add Managed Database
+
 1. Create PostgreSQL managed database
 2. Add connection string to app environment
 
@@ -220,6 +240,7 @@ MAIL_PASSWORD=your-app-password
 ## 📦 Pre-Deployment Checklist
 
 ### ✅ Code Preparation
+
 - [x] `requirements.txt` with all dependencies
 - [x] `Dockerfile` for containerization
 - [x] `wsgi.py` entry point
@@ -228,17 +249,20 @@ MAIL_PASSWORD=your-app-password
 - [x] `.gitignore` to exclude sensitive files
 
 ### ✅ Security
+
 - [ ] Change default `SECRET_KEY` and `JWT_SECRET_KEY`
 - [ ] Set `DEBUG=False` in production
 - [ ] Use environment variables for sensitive data
 - [ ] Enable HTTPS (most platforms provide this automatically)
 
 ### ✅ Database
+
 - [ ] Choose between SQLite (dev) and PostgreSQL/MySQL (production)
 - [ ] Run database migrations
 - [ ] Create sample data if needed
 
 ### ✅ Testing
+
 - [ ] Test API endpoints locally
 - [ ] Import Postman collection for testing
 - [ ] Verify authentication flows
@@ -248,6 +272,7 @@ MAIL_PASSWORD=your-app-password
 ## 🔧 Quick Start Commands
 
 ### For Railway (Recommended):
+
 ```bash
 npm install -g @railway/cli
 railway login
@@ -260,6 +285,7 @@ railway up
 ```
 
 ### For Heroku:
+
 ```bash
 heroku create your-app-name
 heroku addons:create heroku-postgresql:essential-0
@@ -282,18 +308,21 @@ git push heroku main
 ## 📞 Support & Troubleshooting
 
 ### Common Issues:
+
 1. **502 Bad Gateway**: Check if app is binding to correct PORT
 2. **Database Connection**: Verify DATABASE_URL environment variable
 3. **Static Files**: Ensure `static/uploads` directory exists
 4. **Memory Limits**: Free tiers have memory restrictions
 
 ### Platform-Specific Help:
+
 - **Railway**: [docs.railway.app](https://docs.railway.app)
 - **Heroku**: [devcenter.heroku.com](https://devcenter.heroku.com)
 - **Render**: [render.com/docs](https://render.com/docs)
 - **PythonAnywhere**: [help.pythonanywhere.com](https://help.pythonanywhere.com)
 
 ### Next Steps:
+
 1. Choose a platform (Railway recommended for beginners)
 2. Follow the specific deployment steps
 3. Test your deployed API

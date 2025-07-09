@@ -27,9 +27,7 @@
       "size": "basic"
     }
   },
-  "addons": [
-    "heroku-postgresql:essential-0"
-  ],
+  "addons": ["heroku-postgresql:essential-0"],
   "buildpacks": [
     {
       "url": "heroku/python"

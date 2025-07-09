@@ -1,20 +1,20 @@
 name: ecommerce-api
 services:
-- name: api
-  source_dir: /
-  github:
-    repo: your-username/ecommerce_api
-    branch: main
-  run_command: gunicorn wsgi:app
-  environment_slug: python
-  instance_count: 1
-  instance_size_slug: basic-xxs
-  env:
-  - key: FLASK_ENV
-    value: production
-  - key: DEBUG
-    value: "False"
+  - name: api
+    source_dir: /
+    github:
+      repo: your-username/ecommerce_api
+      branch: main
+    run_command: gunicorn wsgi:app
+    environment_slug: python
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    env:
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: "False"
 databases:
-- name: ecommerce-db
-  engine: PG
-  version: "14"
+  - name: ecommerce-db
+    engine: PG
+    version: "14"
