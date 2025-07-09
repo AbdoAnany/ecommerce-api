@@ -364,3 +364,4 @@ All API responses follow this format:
 This is a production-ready e-commerce API backend with comprehensive features and clean architecture. The codebase follows Flask best practices and is designed for scalability and maintainability.
 
 For questions or customizations, refer to the inline code documentation and Flask official documentation.
+# ecommerce-api
