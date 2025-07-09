@@ -1,3 +1,6 @@
+# Alternative requirements.txt for Python 3.13 compatibility
+# Use this if the main requirements.txt still has issues
+
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.7
@@ -13,5 +16,6 @@ email-validator==2.2.0
 python-dateutil==2.9.0
 Werkzeug==3.0.3
 PyMySQL==1.1.1
-psycopg2-binary==2.9.10
+# Use psycopg2 instead of psycopg2-binary for better compatibility
+psycopg2==2.9.10
 gunicorn==22.0.0

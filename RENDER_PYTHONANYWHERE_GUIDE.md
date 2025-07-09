@@ -54,6 +54,7 @@ JWT_SECRET_KEY=<use-generated-key-from-script>
 3. ✅ Click **"Create Database"** (takes 2-3 minutes)
 
 4. 📋 **Copy the Internal Database URL:**
+
    - Once database is created, click on **"ecommerce-db"**
    - In the database dashboard, look for **"Connections"** section
    - Find **"Internal Database URL"** (NOT External Database URL)
@@ -265,6 +266,7 @@ curl https://yourusername.pythonanywhere.com/api/v1
 
 **Error:** `could not connect to server`
 **Solutions:**
+
 - ✅ Make sure you used **Internal Database URL** (starts with `dpg-`)
 - ✅ Verify database status is "Available" in Render dashboard
 - ✅ Check that DATABASE_URL environment variable is set correctly
@@ -272,12 +274,14 @@ curl https://yourusername.pythonanywhere.com/api/v1
 
 **Error:** `database does not exist`
 **Solutions:**
+
 - ✅ Wait for database creation to complete (2-3 minutes)
 - ✅ Refresh database dashboard and copy URL again
 - ✅ Make sure you didn't accidentally modify the database name in URL
 
 **Error:** `authentication failed`
 **Solutions:**
+
 - ✅ Copy the complete Internal Database URL including username and password
 - ✅ Don't manually edit any part of the database URL
 - ✅ Re-copy from Render dashboard if connection fails

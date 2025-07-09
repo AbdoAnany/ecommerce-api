@@ -105,6 +105,21 @@
 
 ## 🔍 **Common Issues & Solutions**
 
+### **🔥 CRITICAL: Python 3.13 Compatibility Issue**
+**Error:** `ImportError: undefined symbol: _PyInterpreterState_Get` with psycopg2
+**Solution:** ✅ **Already fixed in latest version!**
+- Updated requirements.txt with compatible package versions
+- Specified Python 3.11 in render.yaml
+- Added .python-version file
+
+**If you still get this error:**
+1. Make sure you've pushed the latest code to GitHub
+2. In Render, go to Settings → Environment and add:
+   ```
+   PYTHON_VERSION=3.11
+   ```
+3. Redeploy manually
+
 ### **❌ Wrong Database URL**
 ```
 🚫 External URL: postgresql://user:pass@host.render.com:5432/db
