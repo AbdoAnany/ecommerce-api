@@ -799,3 +799,153 @@ def bulk_promote_users():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Bulk promotion failed', 'details': str(e)}), 500
+
+@bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
+@jwt_required()
+@require_admin()
+def reset_user_password_admin(user_id):
+    """Reset user password (Admin only)"""
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    data = request.get_json()
+    
+    if not data or 'new_password' not in data:
+        return jsonify({'error': 'New password is required'}), 400
+    
+    new_password = data['new_password']
+    
+    # Validate password length
+    if len(new_password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters long'}), 400
+    
+    try:
+        # Reset password
+        user.set_password(new_password)
+        user.reset_token = None  # Clear any existing reset token
+        user.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Password reset successfully for user {user.username}',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to reset password', 'details': str(e)}), 500
+
+@bp.route('/reset-admin-password', methods=['POST'])
+@jwt_required()
+@require_admin()
+def reset_admin_password_endpoint():
+    """Reset admin password to default (Super Admin only)"""
+    current_user_id = int(get_jwt_identity())
+    current_user = User.query.get(current_user_id)
+    
+    data = request.get_json() or {}
+    target_email = data.get('admin_email', 'admin@example.com')
+    new_password = data.get('new_password', 'admin123')
+    
+    # Find the target admin user
+    admin_user = User.query.filter_by(email=target_email, role=UserRole.ADMIN).first()
+    
+    if not admin_user:
+        return jsonify({'error': f'Admin user with email {target_email} not found'}), 404
+    
+    # Don't allow resetting your own password this way (use change password instead)
+    if admin_user.id == current_user_id:
+        return jsonify({'error': 'Use change password endpoint to update your own password'}), 400
+    
+    try:
+        admin_user.set_password(new_password)
+        admin_user.reset_token = None
+        admin_user.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Admin password reset successfully for {admin_user.email}',
+            'admin': {
+                'id': admin_user.id,
+                'email': admin_user.email,
+                'username': admin_user.username
+            },
+            'warning': 'Admin should change this password after next login'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to reset admin password', 'details': str(e)}), 500
+
+@bp.route('/change-password', methods=['POST'])
+@jwt_required()
+@require_admin()
+def change_admin_password():
+    """Change current admin password"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    
+    data = request.get_json()
+    
+    if not data or 'current_password' not in data or 'new_password' not in data:
+        return jsonify({'error': 'Current password and new password are required'}), 400
+    
+    current_password = data['current_password']
+    new_password = data['new_password']
+    
+    # Verify current password
+    if not user.check_password(current_password):
+        return jsonify({'error': 'Current password is incorrect'}), 400
+    
+    # Validate new password
+    if len(new_password) < 6:
+        return jsonify({'error': 'New password must be at least 6 characters long'}), 400
+    
+    if current_password == new_password:
+        return jsonify({'error': 'New password must be different from current password'}), 400
+    
+    try:
+        user.set_password(new_password)
+        user.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Password changed successfully',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to change password', 'details': str(e)}), 500
+
+@bp.route('/generate-password', methods=['GET'])
+@jwt_required()
+@require_admin()
+def generate_secure_password_endpoint():
+    """Generate a secure password"""
+    import secrets
+    import string
+    
+    # Generate a 12-character password
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    password = ''.join(secrets.choice(alphabet) for i in range(12))
+    
+    return jsonify({
+        'message': 'Secure password generated',
+        'password': password,
+        'length': len(password),
+        'note': 'Use this password with password reset endpoints'
+    }), 200

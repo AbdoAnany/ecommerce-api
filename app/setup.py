@@ -253,3 +253,41 @@ def list_users():
         
     except Exception as e:
         return jsonify({'error': f'Failed to list users: {str(e)}'}), 500
+
+@setup_bp.route('/reset-admin-password', methods=['POST'])
+def emergency_reset_admin_password():
+    """Emergency admin password reset (only when ALLOW_DB_INIT=true)"""
+    try:
+        # Only allow this when database init is enabled
+        if os.getenv('ALLOW_DB_INIT') != 'true':
+            return jsonify({'error': 'Emergency reset not allowed. Set ALLOW_DB_INIT=true'}), 403
+        
+        data = request.get_json() or {}
+        new_password = data.get('new_password', 'admin123')
+        admin_email = data.get('admin_email', 'admin@example.com')
+        
+        # Find admin user
+        admin_user = User.query.filter_by(email=admin_email).first()
+        
+        if not admin_user:
+            return jsonify({'error': f'Admin user with email {admin_email} not found'}), 404
+        
+        # Reset password
+        admin_user.set_password(new_password)
+        admin_user.role = UserRole.ADMIN  # Ensure admin role
+        admin_user.is_active = True
+        admin_user.is_verified = True
+        admin_user.reset_token = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Admin password reset successfully',
+            'admin_email': admin_user.email,
+            'new_password': new_password,
+            'warning': 'Change this password after login'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Password reset failed: {str(e)}'}), 500
