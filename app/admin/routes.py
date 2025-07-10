@@ -640,3 +640,162 @@ def get_admin_stats():
             ]
         }
     }), 200
+
+@bp.route('/promote-user/<int:user_id>', methods=['PUT'])
+@jwt_required()
+@require_admin()
+def promote_user_to_admin(user_id):
+    """Promote a user to admin role (Admin only)"""
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user is already admin
+    if user.role == UserRole.ADMIN:
+        return jsonify({
+            'message': 'User is already an admin',
+            'data': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'role': user.role.value
+            }
+        }), 200
+    
+    try:
+        # Store previous role for logging
+        previous_role = user.role.value
+        
+        # Update to admin
+        user.role = UserRole.ADMIN
+        user.is_active = True  # Ensure admin is active
+        user.is_verified = True  # Ensure admin is verified
+        user.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'User promoted to admin successfully',
+            'data': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'full_name': user.get_full_name(),
+                'previous_role': previous_role,
+                'new_role': user.role.value,
+                'is_active': user.is_active,
+                'is_verified': user.is_verified,
+                'updated_at': user.updated_at.isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to promote user to admin', 'details': str(e)}), 500
+
+@bp.route('/demote-admin/<int:user_id>', methods=['PUT'])
+@jwt_required()
+@require_admin()
+def demote_admin_to_user(user_id):
+    """Demote an admin to regular user (Admin only)"""
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user is admin
+    if user.role != UserRole.ADMIN:
+        return jsonify({'error': 'User is not an admin'}), 400
+    
+    # Prevent demoting yourself
+    current_user_id = int(get_jwt_identity())
+    if user.id == current_user_id:
+        return jsonify({'error': 'Cannot demote yourself'}), 400
+    
+    # Check if this is the last admin
+    admin_count = User.query.filter_by(role=UserRole.ADMIN, is_active=True).count()
+    if admin_count <= 1:
+        return jsonify({'error': 'Cannot demote the last admin user'}), 400
+    
+    try:
+        # Update to customer
+        user.role = UserRole.CUSTOMER
+        user.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Admin demoted to customer successfully',
+            'data': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'full_name': user.get_full_name(),
+                'previous_role': 'admin',
+                'new_role': user.role.value,
+                'updated_at': user.updated_at.isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to demote admin to user', 'details': str(e)}), 500
+
+@bp.route('/bulk-promote', methods=['POST'])
+@jwt_required()
+@require_admin()
+def bulk_promote_users():
+    """Promote multiple users to admin (Admin only)"""
+    data = request.get_json()
+    
+    if not data or 'user_ids' not in data:
+        return jsonify({'error': 'user_ids array is required'}), 400
+    
+    user_ids = data['user_ids']
+    
+    if not isinstance(user_ids, list) or len(user_ids) == 0:
+        return jsonify({'error': 'user_ids must be a non-empty array'}), 400
+    
+    try:
+        promoted_users = []
+        errors = []
+        
+        for user_id in user_ids:
+            user = User.query.get(user_id)
+            
+            if not user:
+                errors.append(f"User ID {user_id} not found")
+                continue
+            
+            if user.role == UserRole.ADMIN:
+                errors.append(f"User {user.username} (ID: {user_id}) is already admin")
+                continue
+            
+            # Promote to admin
+            previous_role = user.role.value
+            user.role = UserRole.ADMIN
+            user.is_active = True
+            user.is_verified = True
+            user.updated_at = datetime.now(timezone.utc)
+            
+            promoted_users.append({
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'previous_role': previous_role,
+                'new_role': user.role.value
+            })
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Bulk promotion completed',
+            'promoted_count': len(promoted_users),
+            'promoted_users': promoted_users,
+            'errors': errors
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Bulk promotion failed', 'details': str(e)}), 500

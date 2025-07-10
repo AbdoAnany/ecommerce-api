@@ -3,7 +3,7 @@
 Simple database setup endpoint for manual initialization
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app import db
 from app.models import User, Product, Category, Order, OrderItem, CartItem, UserRole
 from werkzeug.security import generate_password_hash
@@ -142,3 +142,114 @@ def health_check():
             'database': 'disconnected',
             'error': str(e)
         }), 500
+
+@setup_bp.route('/promote-user', methods=['POST'])
+def promote_user_to_admin():
+    """Promote a user to admin role via setup endpoint"""
+    try:
+        # Only allow this in production if explicitly enabled
+        if os.getenv('ALLOW_DB_INIT') != 'true':
+            return jsonify({'error': 'User promotion not allowed'}), 403
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'Request body required'}), 400
+        
+        user_id = data.get('user_id')
+        email = data.get('email')
+        
+        if not user_id and not email:
+            return jsonify({'error': 'Either user_id or email is required'}), 400
+        
+        # Find user
+        if user_id:
+            user = User.query.get(user_id)
+        else:
+            user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if already admin
+        if user.role == UserRole.ADMIN:
+            return jsonify({
+                'message': 'User is already an admin',
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'username': user.username,
+                    'role': user.role.value
+                }
+            }), 200
+        
+        # Store previous role
+        previous_role = user.role.value
+        
+        # Promote to admin
+        user.role = UserRole.ADMIN
+        user.is_active = True
+        user.is_verified = True
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'User promoted to admin successfully',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'full_name': user.get_full_name(),
+                'previous_role': previous_role,
+                'new_role': user.role.value,
+                'is_active': user.is_active,
+                'is_verified': user.is_verified
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to promote user: {str(e)}'}), 500
+
+@setup_bp.route('/list-users', methods=['GET'])
+def list_users():
+    """List all users (for setup purposes)"""
+    try:
+        # Only allow this in production if explicitly enabled
+        if os.getenv('ALLOW_DB_INIT') != 'true':
+            return jsonify({'error': 'User listing not allowed'}), 403
+        
+        users = User.query.all()
+        
+        user_list = [
+            {
+                'id': user.id,
+                'email': user.email,
+                'username': user.username,
+                'full_name': user.get_full_name(),
+                'role': user.role.value,
+                'is_active': user.is_active,
+                'is_verified': user.is_verified,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            }
+            for user in users
+        ]
+        
+        # Count by role
+        admin_count = len([u for u in users if u.role == UserRole.ADMIN])
+        customer_count = len([u for u in users if u.role == UserRole.CUSTOMER])
+        vendor_count = len([u for u in users if u.role == UserRole.VENDOR])
+        
+        return jsonify({
+            'message': 'Users retrieved successfully',
+            'total_users': len(users),
+            'counts': {
+                'admins': admin_count,
+                'customers': customer_count,
+                'vendors': vendor_count
+            },
+            'users': user_list
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to list users: {str(e)}'}), 500
