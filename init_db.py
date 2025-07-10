@@ -61,6 +61,7 @@ def init_database():
                     Product(
                         name='iPhone 15',
                         description='Latest Apple smartphone with advanced features',
+                        sku='IPHONE15-001',
                         price=999.99,
                         stock_quantity=50,
                         category_id=1,
@@ -69,6 +70,7 @@ def init_database():
                     Product(
                         name='MacBook Pro',
                         description='Powerful laptop for professionals',
+                        sku='MACBOOK-PRO-001',
                         price=1999.99,
                         stock_quantity=25,
                         category_id=1,
@@ -77,6 +79,7 @@ def init_database():
                     Product(
                         name='Nike Air Jordan',
                         description='Premium basketball shoes',
+                        sku='NIKE-JORDAN-001',
                         price=149.99,
                         stock_quantity=100,
                         category_id=2,
@@ -85,6 +88,7 @@ def init_database():
                     Product(
                         name='Python Programming Book',
                         description='Learn Python programming from scratch',
+                        sku='PYTHON-BOOK-001',
                         price=39.99,
                         stock_quantity=200,
                         category_id=3,
@@ -93,6 +97,7 @@ def init_database():
                     Product(
                         name='Garden Tool Set',
                         description='Complete set of gardening tools',
+                        sku='GARDEN-TOOLS-001',
                         price=79.99,
                         stock_quantity=75,
                         category_id=4,
