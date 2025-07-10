@@ -45,11 +45,11 @@ def init_database():
         
         # Create sample categories
         categories = [
-            Category(name='Electronics', description='Electronic devices and gadgets'),
-            Category(name='Clothing', description='Fashion and apparel'),
-            Category(name='Books', description='Books and literature'),
-            Category(name='Home & Garden', description='Home improvement and gardening'),
-            Category(name='Sports', description='Sports and outdoor equipment')
+            Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
+            Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
+            Category(name='Books', description='Books and literature', slug='books'),
+            Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
+            Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
         ]
         
         for category in categories:
@@ -107,7 +107,8 @@ def health_check():
     """Simple health check endpoint"""
     try:
         # Try to connect to database
-        db.session.execute('SELECT 1')
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
         return jsonify({
             'status': 'healthy',
             'database': 'connected',

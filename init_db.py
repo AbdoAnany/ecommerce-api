@@ -42,11 +42,11 @@ def init_database():
                 # Create sample categories
                 print("📁 Creating sample categories...")
                 categories = [
-                    Category(name='Electronics', description='Electronic devices and gadgets'),
-                    Category(name='Clothing', description='Fashion and apparel'),
-                    Category(name='Books', description='Books and literature'),
-                    Category(name='Home & Garden', description='Home improvement and gardening'),
-                    Category(name='Sports', description='Sports and outdoor equipment')
+                    Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
+                    Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
+                    Category(name='Books', description='Books and literature', slug='books'),
+                    Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
+                    Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
                 ]
                 
                 for category in categories:
