@@ -59,8 +59,8 @@ def get_products():
     # Search filter
     if search:
         search_filter = or_(
-            Product.name.contains(search),
-            Product.description.contains(search),
+            Product.name_en.contains(search),
+            Product.description_en.contains(search),
             Product.short_description.contains(search),
             Product.sku.contains(search)
         )
@@ -100,9 +100,9 @@ def get_products():
             query = query.order_by(Product.price.asc())
     elif sort_by == 'name':
         if sort_order == 'desc':
-            query = query.order_by(Product.name.desc())
+            query = query.order_by(Product.name_en.desc())
         else:
-            query = query.order_by(Product.name.asc())
+            query = query.order_by(Product.name_en.asc())
     else:  # created_at or default
         if sort_order == 'desc':
             query = query.order_by(Product.created_at.desc())
@@ -179,7 +179,7 @@ def create_product():
     
     # Generate slug if not provided
     if not data.get('slug'):
-        data['slug'] = generate_slug(data['name'])
+        data['slug'] = generate_slug(data['name_en'])
     
     # Check if slug already exists
     existing_product = Product.query.filter_by(slug=data['slug']).first()
@@ -360,8 +360,8 @@ def search_products():
     
     # Search in multiple fields
     search_filter = or_(
-        Product.name.contains(query_text),
-        Product.description.contains(query_text),
+        Product.name_en.contains(query_text),
+        Product.description_en.contains(query_text),
         Product.short_description.contains(query_text),
         Product.sku.contains(query_text),
         Product.tags.any(Tag.name.contains(query_text))

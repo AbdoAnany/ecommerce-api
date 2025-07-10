@@ -2,6 +2,10 @@ from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from datetime import datetime, timezone
 from app.categories import bp
+from app.categories.schemas import (
+    CategoryCreateSchema, CategoryUpdateSchema, 
+    CategoryListSchema, CategoryDetailSchema, CategoryTreeSchema
+)
 from app.models import Category, User, UserRole
 from app import db
 import re
@@ -31,34 +35,31 @@ def generate_slug(text):
 @bp.route('', methods=['GET'])
 def get_categories():
     """Get all active categories"""
-    categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
+    tree = request.args.get('tree', type=bool, default=False)
+    featured_only = request.args.get('featured', type=bool, default=False)
+    parent_id = request.args.get('parent_id', type=int)
     
-    category_list = []
-    for category in categories:
-        category_data = {
-            'id': category.id,
-            'name': category.name,
-            'description': category.description,
-            'slug': category.slug,
-            'image_url': category.image_url,
-            'sort_order': category.sort_order,
-            'parent_id': category.parent_id,
-            'product_count': len(category.products),
-            'children': [
-                {
-                    'id': child.id,
-                    'name': child.name,
-                    'slug': child.slug,
-                    'product_count': len(child.products)
-                }
-                for child in category.children if child.is_active
-            ]
-        }
-        category_list.append(category_data)
+    query = Category.query.filter_by(is_active=True)
+    
+    if featured_only:
+        query = query.filter_by(is_featured=True)
+    
+    if parent_id is not None:
+        query = query.filter_by(parent_id=parent_id)
+    elif tree:
+        # For tree view, get only root categories (no parent)
+        query = query.filter_by(parent_id=None)
+    
+    categories = query.order_by(Category.position, Category.name_en).all()
+    
+    if tree:
+        schema = CategoryTreeSchema(many=True)
+    else:
+        schema = CategoryListSchema(many=True)
     
     return jsonify({
         'message': 'Categories retrieved successfully',
-        'data': category_list
+        'data': schema.dump(categories)
     }), 200
 
 @bp.route('/<int:category_id>', methods=['GET'])
@@ -69,76 +70,27 @@ def get_category(category_id):
     if not category:
         return jsonify({'error': 'Category not found'}), 404
     
-    category_data = {
-        'id': category.id,
-        'name': category.name,
-        'description': category.description,
-        'slug': category.slug,
-        'image_url': category.image_url,
-        'sort_order': category.sort_order,
-        'parent_id': category.parent_id,
-        'parent': {
-            'id': category.parent.id,
-            'name': category.parent.name,
-            'slug': category.parent.slug
-        } if category.parent else None,
-        'children': [
-            {
-                'id': child.id,
-                'name': child.name,
-                'slug': child.slug,
-                'description': child.description,
-                'product_count': len(child.products)
-            }
-            for child in category.children if child.is_active
-        ],
-        'product_count': len(category.products),
-        'created_at': category.created_at.isoformat(),
-        'updated_at': category.updated_at.isoformat()
-    }
-    
+    schema = CategoryDetailSchema()
     return jsonify({
         'message': 'Category retrieved successfully',
-        'data': category_data
+        'data': schema.dump(category)
     }), 200
 
-@bp.route('/slug/<slug>', methods=['GET'])
+@bp.route('/<slug>', methods=['GET'])
 def get_category_by_slug(slug):
     """Get category by slug"""
-    category = Category.query.filter_by(slug=slug, is_active=True).first()
+    category = Category.query.filter(
+        db.or_(Category.slug == slug, Category.slug_en == slug, Category.slug_ar == slug),
+        Category.is_active == True
+    ).first()
     
     if not category:
         return jsonify({'error': 'Category not found'}), 404
     
-    category_data = {
-        'id': category.id,
-        'name': category.name,
-        'description': category.description,
-        'slug': category.slug,
-        'image_url': category.image_url,
-        'sort_order': category.sort_order,
-        'parent_id': category.parent_id,
-        'parent': {
-            'id': category.parent.id,
-            'name': category.parent.name,
-            'slug': category.parent.slug
-        } if category.parent else None,
-        'children': [
-            {
-                'id': child.id,
-                'name': child.name,
-                'slug': child.slug,
-                'description': child.description,
-                'product_count': len(child.products)
-            }
-            for child in category.children if child.is_active
-        ],
-        'product_count': len(category.products)
-    }
-    
+    schema = CategoryDetailSchema()
     return jsonify({
         'message': 'Category retrieved successfully',
-        'data': category_data
+        'data': schema.dump(category)
     }), 200
 
 @bp.route('', methods=['POST'])
@@ -146,57 +98,42 @@ def get_category_by_slug(slug):
 @require_admin()
 def create_category():
     """Create new category (Admin only)"""
-    data = request.get_json()
+    schema = CategoryCreateSchema()
     
-    # Validation
-    if not data or not data.get('name'):
-        return jsonify({'error': 'Category name is required'}), 400
+    try:
+        data = schema.load(request.get_json())
+    except Exception as e:
+        return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
     
-    # Generate slug if not provided
-    slug = data.get('slug') or generate_slug(data['name'])
+    # Generate slugs if not provided
+    if not data.get('slug'):
+        data['slug'] = generate_slug(data['name_en'])
+    if not data.get('slug_en'):
+        data['slug_en'] = generate_slug(data['name_en'])
+    if not data.get('slug_ar') and data.get('name_ar'):
+        data['slug_ar'] = generate_slug(data['name_ar'])
     
-    # Check if slug already exists
-    existing_category = Category.query.filter_by(slug=slug).first()
+    # Check if primary slug already exists
+    existing_category = Category.query.filter_by(slug=data['slug']).first()
     if existing_category:
-        base_slug = slug
+        base_slug = data['slug']
         counter = 1
         while existing_category:
-            slug = f"{base_slug}-{counter}"
-            existing_category = Category.query.filter_by(slug=slug).first()
+            data['slug'] = f"{base_slug}-{counter}"
+            existing_category = Category.query.filter_by(slug=data['slug']).first()
             counter += 1
     
-    # Validate parent category if provided
-    parent_id = data.get('parent_id')
-    if parent_id:
-        parent_category = Category.query.get(parent_id)
-        if not parent_category:
-            return jsonify({'error': 'Parent category not found'}), 400
-    
-    category = Category(
-        name=data['name'],
-        description=data.get('description'),
-        slug=slug,
-        image_url=data.get('image_url'),
-        sort_order=data.get('sort_order', 0),
-        parent_id=parent_id,
-        is_active=data.get('is_active', True)
-    )
+    # Create category
+    category = Category(**data)
     
     try:
         db.session.add(category)
         db.session.commit()
         
+        schema = CategoryDetailSchema()
         return jsonify({
             'message': 'Category created successfully',
-            'data': {
-                'id': category.id,
-                'name': category.name,
-                'slug': category.slug,
-                'description': category.description,
-                'parent_id': category.parent_id,
-                'sort_order': category.sort_order,
-                'is_active': category.is_active
-            }
+            'data': schema.dump(category)
         }), 201
         
     except Exception as e:

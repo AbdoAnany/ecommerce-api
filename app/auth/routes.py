@@ -280,3 +280,55 @@ def verify_email(token):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to verify email', 'details': str(e)}), 500
+
+@bp.route('/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    """Get current user profile"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    user_schema = UserResponseSchema()
+    return jsonify({
+        'message': 'Profile retrieved successfully',
+        'data': user_schema.dump(user)
+    }), 200
+
+@bp.route('/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    """Update current user profile"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    try:
+        # Update allowed fields
+        if 'first_name' in data:
+            user.first_name = data['first_name']
+        if 'last_name' in data:
+            user.last_name = data['last_name']
+        if 'phone' in data:
+            user.phone = data['phone']
+        
+        user.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        user_schema = UserResponseSchema()
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'data': user_schema.dump(user)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update profile', 'details': str(e)}), 500

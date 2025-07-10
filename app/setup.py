@@ -50,20 +50,44 @@ def init_database():
             db.session.add(admin_user)
             print("Created new admin user")
         
+        # Create customer user for testing
+        customer_user = User.query.filter_by(email='customer@example.com').first()
+        if not customer_user:
+            customer_user = User(
+                username='customer',
+                email='customer@example.com',
+                password_hash=generate_password_hash('customer123'),
+                first_name='Customer',
+                last_name='User',
+                role=UserRole.CUSTOMER,
+                is_active=True,
+                is_verified=True
+            )
+            db.session.add(customer_user)
+            print("Created customer user")
+        else:
+            # Update password
+            customer_user.password_hash = generate_password_hash('customer123')
+            print("Updated customer user password")
+        
+        # Commit users first
+        db.session.commit()
+        
         # Create sample categories (if they don't exist)
         categories_count = Category.query.count()
         if categories_count == 0:
             categories = [
-                Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
-                Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
-                Category(name='Books', description='Books and literature', slug='books'),
-                Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
-                Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
+                Category(name_en='Electronics', description_en='Electronic devices and gadgets', slug='electronics'),
+                Category(name_en='Clothing', description_en='Fashion and apparel', slug='clothing'),
+                Category(name_en='Books', description_en='Books and literature', slug='books'),
+                Category(name_en='Home & Garden', description_en='Home improvement and gardening', slug='home-garden'),
+                Category(name_en='Sports', description_en='Sports and outdoor equipment', slug='sports')
             ]
             
             for category in categories:
                 db.session.add(category)
             
+            # Commit categories before products
             db.session.commit()
             categories_created = len(categories)
         else:
@@ -72,41 +96,126 @@ def init_database():
         # Create sample products (if they don't exist)
         products_count = Product.query.count()
         if products_count == 0:
-            products = [
-                Product(
-                    name='iPhone 15',
-                    description='Latest Apple smartphone with advanced features',
-                    sku='IPHONE15-001',
-                    price=999.99,
-                    stock_quantity=50,
-                    category_id=1,
-                    is_active=True
-                ),
-                Product(
-                    name='MacBook Pro',
-                    description='Powerful laptop for professionals',
-                    sku='MACBOOK-PRO-001',
-                    price=1999.99,
-                    stock_quantity=25,
-                    category_id=1,
-                    is_active=True
-                ),
-                Product(
-                    name='Nike Air Jordan',
-                    description='Premium basketball shoes',
-                    sku='NIKE-JORDAN-001',
-                    price=149.99,
-                    stock_quantity=100,
-                    category_id=2,
-                    is_active=True
-                )
-            ]
+            # Get actual category IDs from database
+            electronics_cat = Category.query.filter_by(slug='electronics').first()
+            clothing_cat = Category.query.filter_by(slug='clothing').first()
             
-            for product in products:
-                db.session.add(product)
-            
-            db.session.commit()
-            products_created = len(products)
+            if electronics_cat and clothing_cat:
+                print(f"Found categories: Electronics ID={electronics_cat.id}, Clothing ID={clothing_cat.id}")
+                
+                products_data = [
+                    {
+                        'name_en': 'Dove Shower Gel 500ml',
+                        'name_ar': 'دوف شاور جل 500 مل',
+                        'description_en': 'Dove Moisturizing Shower Gel, 500ml – enriched with skin-natural nutrients to leave your skin soft, smooth, and hydrated after every shower.',
+                        'description_ar': 'دوف جل استحمام مرطب 500 مل – غني بالمغذيات الطبيعية التي تترك بشرتك ناعمة ورطبة بعد كل استخدام.',
+                        'thumbnail': 'https://cdn.example.com/03/prod/44871-P.jfif',
+                        'sku': '6221030009120',
+                        'slug': 'dove-shower-gel-500ml',
+                        'price': 57.00,
+                        'discount_price': 0,
+                        'currency': 'EGP',
+                        'stock_quantity': 10,
+                        'min_stock': 0,
+                        'availability': 'in_stock',
+                        'brand': 'Dove',
+                        'unit_measure_en': 'milliliter',
+                        'unit_measure_ar': 'ملليلتر',
+                        'unit_value': 500,
+                        'package_type': 'Bottle',
+                        'country_of_origin': 'Germany',
+                        'ingredients': '["Water", "Glycerin", "Sodium Laureth Sulfate", "Cocamidopropyl Betaine", "Fragrance", "Citric Acid", "Sodium Benzoate"]',
+                        'usage_instructions_en': 'Apply a small amount to wet skin, lather, and rinse thoroughly.',
+                        'usage_instructions_ar': 'ضعي كمية صغيرة على البشرة المبللة، دلكي بلطف، ثم اشطفي جيدًا.',
+                        'warnings_en': 'For external use only. Avoid contact with eyes.',
+                        'warnings_ar': 'للاستخدام الخارجي فقط. تجنب ملامسة العينين.',
+                        'min_qty': 1,
+                        'step_qty': 1,
+                        'max_qty': 10,
+                        'is_featured': False,
+                        'is_new': False,
+                        'is_on_sale': False,
+                        'is_organic': False,
+                        'category_id': electronics_cat.id,
+                        'is_active': True
+                    },
+                    {
+                        'name_en': 'iPhone 15',
+                        'name_ar': 'آيفون 15',
+                        'description_en': 'Latest Apple smartphone with advanced features',
+                        'description_ar': 'أحدث هاتف ذكي من آبل مع ميزات متقدمة',
+                        'sku': 'IPHONE15-001',
+                        'slug': 'iphone-15',
+                        'price': 999.99,
+                        'discount_price': 0,
+                        'currency': 'USD',
+                        'stock_quantity': 50,
+                        'min_stock': 5,
+                        'availability': 'in_stock',
+                        'brand': 'Apple',
+                        'unit_measure_en': 'piece',
+                        'unit_measure_ar': 'قطعة',
+                        'unit_value': 1,
+                        'package_type': 'Box',
+                        'country_of_origin': 'China',
+                        'min_qty': 1,
+                        'step_qty': 1,
+                        'max_qty': 5,
+                        'is_featured': True,
+                        'is_new': True,
+                        'is_on_sale': False,
+                        'is_organic': False,
+                        'category_id': electronics_cat.id,
+                        'is_active': True
+                    },
+                    {
+                        'name_en': 'Nike Air Jordan',
+                        'name_ar': 'نايك اير جوردان',
+                        'description_en': 'Premium basketball shoes',
+                        'description_ar': 'حذاء كرة السلة المميز',
+                        'sku': 'NIKE-JORDAN-001',
+                        'slug': 'nike-air-jordan',
+                        'price': 149.99,
+                        'discount_price': 20.00,
+                        'currency': 'USD',
+                        'stock_quantity': 100,
+                        'min_stock': 10,
+                        'availability': 'in_stock',
+                        'brand': 'Nike',
+                        'unit_measure_en': 'pair',
+                        'unit_measure_ar': 'زوج',
+                        'unit_value': 1,
+                        'package_type': 'Box',
+                        'country_of_origin': 'Vietnam',
+                        'min_qty': 1,
+                        'step_qty': 1,
+                        'max_qty': 10,
+                        'is_featured': False,
+                        'is_new': False,
+                        'is_on_sale': True,
+                        'is_organic': False,
+                        'category_id': clothing_cat.id,
+                        'is_active': True
+                    }
+                ]
+                
+                products_created = 0
+                for product_data in products_data:
+                    try:
+                        print(f"Creating product: {product_data['name_en']} with slug: {product_data['slug']}")
+                        product = Product(**product_data)
+                        print(f"Product created with slug: {product.slug}")
+                        db.session.add(product)
+                        db.session.commit()
+                        products_created += 1
+                        print(f"Product {product.name_en} committed successfully")
+                    except Exception as e:
+                        print(f"Failed to create product {product_data['name_en']}: {str(e)}")
+                        db.session.rollback()
+                        continue
+            else:
+                products_created = 0
+                print("Categories not found, skipping product creation")
         else:
             products_created = 0
         

@@ -1,7 +1,0 @@
-# PythonAnywhere Environment Variables
-FLASK_ENV=production
-DEBUG=False
-SECRET_KEY=WE30iHDb_7tq8ND1lJGOhOlJnIQ9QJGkroWwZTbevNM
-JWT_SECRET_KEY=F2rPa5Ns2sxhk6hAkxe1DqRbit-fQ2yQTIX-oxBhQmc
-
-# Add these to your pythonanywhere_wsgi.py file
