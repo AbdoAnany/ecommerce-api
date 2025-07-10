@@ -515,3 +515,128 @@ def get_sales_analytics():
         'message': 'Sales analytics retrieved successfully',
         'data': analytics_data
     }), 200
+
+@bp.route('/admin-users', methods=['GET'])
+@jwt_required()
+@require_admin()
+def get_admin_users():
+    """Get all admin users"""
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 20, type=int), 100)
+    is_active = request.args.get('is_active', type=bool)
+    search = request.args.get('search', '').strip()
+    
+    # Build query for admin users only
+    query = User.query.filter_by(role=UserRole.ADMIN)
+    
+    if is_active is not None:
+        query = query.filter_by(is_active=is_active)
+    
+    if search:
+        search_filter = db.or_(
+            User.email.contains(search),
+            User.username.contains(search),
+            User.first_name.contains(search),
+            User.last_name.contains(search)
+        )
+        query = query.filter(search_filter)
+    
+    # Order by created date
+    query = query.order_by(User.created_at.desc())
+    
+    # Paginate
+    admin_users = query.paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # Format response
+    admin_list = [
+        {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.get_full_name(),
+            'role': user.role.value,
+            'is_active': user.is_active,
+            'is_verified': user.is_verified,
+            'created_at': user.created_at.isoformat(),
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+            'orders_count': len(user.orders) if user.orders else 0
+        }
+        for user in admin_users.items
+    ]
+    
+    return jsonify({
+        'message': 'Admin users retrieved successfully',
+        'data': admin_list,
+        'pagination': {
+            'page': admin_users.page,
+            'pages': admin_users.pages,
+            'per_page': admin_users.per_page,
+            'total': admin_users.total,
+            'has_next': admin_users.has_next,
+            'has_prev': admin_users.has_prev
+        }
+    }), 200
+
+@bp.route('/current-admin', methods=['GET'])
+@jwt_required()
+@require_admin()
+def get_current_admin():
+    """Get current logged-in admin user details"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    
+    return jsonify({
+        'message': 'Current admin user retrieved',
+        'data': {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.get_full_name(),
+            'role': user.role.value,
+            'is_active': user.is_active,
+            'is_verified': user.is_verified,
+            'created_at': user.created_at.isoformat(),
+            'last_login': user.last_login.isoformat() if user.last_login else None
+        }
+    }), 200
+
+@bp.route('/admin-stats', methods=['GET'])
+@jwt_required()
+@require_admin()
+def get_admin_stats():
+    """Get admin user statistics"""
+    total_admins = User.query.filter_by(role=UserRole.ADMIN).count()
+    active_admins = User.query.filter_by(role=UserRole.ADMIN, is_active=True).count()
+    verified_admins = User.query.filter_by(role=UserRole.ADMIN, is_verified=True).count()
+    
+    # Get recent admin logins
+    recent_admin_logins = User.query.filter(
+        User.role == UserRole.ADMIN,
+        User.last_login.isnot(None)
+    ).order_by(User.last_login.desc()).limit(5).all()
+    
+    return jsonify({
+        'message': 'Admin statistics retrieved',
+        'data': {
+            'counts': {
+                'total_admins': total_admins,
+                'active_admins': active_admins,
+                'verified_admins': verified_admins
+            },
+            'recent_logins': [
+                {
+                    'id': admin.id,
+                    'username': admin.username,
+                    'email': admin.email,
+                    'last_login': admin.last_login.isoformat()
+                }
+                for admin in recent_admin_logins
+            ]
+        }
+    }), 200

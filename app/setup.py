@@ -24,78 +24,97 @@ def init_database():
         
         # Check if admin user already exists
         admin_user = User.query.filter_by(email='admin@example.com').first()
+        if not admin_user:
+            admin_user = User.query.filter_by(username='admin').first()
+        
         if admin_user:
-            return jsonify({
-                'message': 'Database already initialized',
-                'admin_exists': True
-            }), 200
-        
-        # Create admin user
-        admin_user = User(
-            username='admin',
-            email='admin@example.com',
-            password_hash=generate_password_hash('admin123'),
-            first_name='Admin',
-            last_name='User',
-            role=UserRole.ADMIN,
-            is_active=True,
-            is_verified=True
-        )
-        db.session.add(admin_user)
-        
-        # Create sample categories
-        categories = [
-            Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
-            Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
-            Category(name='Books', description='Books and literature', slug='books'),
-            Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
-            Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
-        ]
-        
-        for category in categories:
-            db.session.add(category)
-        
-        db.session.commit()
-        
-        # Create sample products
-        products = [
-            Product(
-                name='iPhone 15',
-                description='Latest Apple smartphone with advanced features',
-                price=999.99,
-                stock_quantity=50,
-                category_id=1,
-                is_active=True
-            ),
-            Product(
-                name='MacBook Pro',
-                description='Powerful laptop for professionals',
-                price=1999.99,
-                stock_quantity=25,
-                category_id=1,
-                is_active=True
-            ),
-            Product(
-                name='Nike Air Jordan',
-                description='Premium basketball shoes',
-                price=149.99,
-                stock_quantity=100,
-                category_id=2,
-                is_active=True
+            # Update existing admin user
+            admin_user.password_hash = generate_password_hash('admin123')
+            admin_user.email = 'admin@example.com'
+            admin_user.role = UserRole.ADMIN
+            admin_user.is_active = True
+            admin_user.is_verified = True
+            print("Updated existing admin user")
+        else:
+            # Create new admin user
+            admin_user = User(
+                username='admin',
+                email='admin@example.com',
+                password_hash=generate_password_hash('admin123'),
+                first_name='Admin',
+                last_name='User',
+                role=UserRole.ADMIN,
+                is_active=True,
+                is_verified=True
             )
-        ]
+            db.session.add(admin_user)
+            print("Created new admin user")
         
-        for product in products:
-            db.session.add(product)
+        # Create sample categories (if they don't exist)
+        categories_count = Category.query.count()
+        if categories_count == 0:
+            categories = [
+                Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
+                Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
+                Category(name='Books', description='Books and literature', slug='books'),
+                Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
+                Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
+            ]
+            
+            for category in categories:
+                db.session.add(category)
+            
+            db.session.commit()
+            categories_created = len(categories)
+        else:
+            categories_created = 0
         
-        db.session.commit()
+        # Create sample products (if they don't exist)
+        products_count = Product.query.count()
+        if products_count == 0:
+            products = [
+                Product(
+                    name='iPhone 15',
+                    description='Latest Apple smartphone with advanced features',
+                    price=999.99,
+                    stock_quantity=50,
+                    category_id=1,
+                    is_active=True
+                ),
+                Product(
+                    name='MacBook Pro',
+                    description='Powerful laptop for professionals',
+                    price=1999.99,
+                    stock_quantity=25,
+                    category_id=1,
+                    is_active=True
+                ),
+                Product(
+                    name='Nike Air Jordan',
+                    description='Premium basketball shoes',
+                    price=149.99,
+                    stock_quantity=100,
+                    category_id=2,
+                    is_active=True
+                )
+            ]
+            
+            for product in products:
+                db.session.add(product)
+            
+            db.session.commit()
+            products_created = len(products)
+        else:
+            products_created = 0
         
         return jsonify({
             'message': 'Database initialized successfully!',
             'admin_email': 'admin@example.com',
             'admin_password': 'admin123',
-            'categories_created': len(categories),
-            'products_created': len(products)
+            'categories_created': categories_created,
+            'products_created': products_created,
+            'existing_categories': categories_count,
+            'existing_products': products_count
         }), 200
         
     except Exception as e:
