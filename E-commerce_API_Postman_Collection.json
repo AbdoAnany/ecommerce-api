@@ -1,9 +1,14 @@
 {
   "info": {
     "_postman_id": "e-commerce-api-collection",
-    "name": "E-commerce API Collection",
-    "description": "Complete collection of E-commerce Backend API endpoints with authentication, CRUD operations, and admin features.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "E-commerce API Collection (Updated)",
+    "description": "Complete collection of E-commerce Backend API endpoints with authentication, CRUD operations, admin features, user management, and password reset functionality.\n\n## Features:\n- User Authentication & Registration\n- Product & Category Management\n- Shopping Cart & Order Processing\n- Admin Dashboard & Analytics\n- User Management & Role Assignment\n- Password Reset & Security Features\n- Setup & Emergency Endpoints\n\n## Quick Start:\n1. Use 'Test Admin Login' to get admin access\n2. Use 'Test Customer Login' for customer access\n3. Check 'Quick System Status' for health\n4. Initialize database with 'Initialize Database'\n\n## Production URL:\nhttps://ecommerce-api-2owr.onrender.com\n\n## Admin Credentials:\nEmail: admin@example.com\nPassword: admin123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 2,
+      "minor": 0,
+      "patch": 0
+    }
   },
   "item": [
     {
@@ -1106,6 +1111,256 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Admin Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/admin-users?is_active=true&search=admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "admin-users"],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "true",
+                  "description": "Filter by active status"
+                },
+                {
+                  "key": "search",
+                  "value": "admin",
+                  "description": "Search by name, email, username"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/current-admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "current-admin"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/admin-stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "admin-stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Promote User to Admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/promote-user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "promote-user", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Demote Admin to User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/demote-admin/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "demote-admin", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Promote Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_ids\": [2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/bulk-promote",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "bulk-promote"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset User Password (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"new_password\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/{{user_id}}/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "users", "{{user_id}}", "reset-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Admin Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"admin_email\": \"admin@example.com\",\n    \"new_password\": \"newadminpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/reset-admin-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "reset-admin-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Own Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"current_password\": \"admin123\",\n    \"new_password\": \"mynewsecurepassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "change-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Secure Password",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/generate-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "generate-password"]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -1219,6 +1474,240 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Setup & Emergency",
+      "item": [
+        {
+          "name": "Database Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/setup/health",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Initialize Database",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/setup/init-db",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "init-db"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Users (Setup)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/setup/list-users",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "list-users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Promote User to Admin (Setup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/setup/promote-user",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "promote-user"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Promote User by Email (Setup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"customer@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/setup/promote-user",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "promote-user"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Emergency Admin Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"admin_email\": \"admin@example.com\",\n    \"new_password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/setup/reset-admin-password",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "reset-admin-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Testing & Utilities",
+      "item": [
+        {
+          "name": "Test Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('admin_token', response.data.access_token);",
+                  "    pm.environment.set('admin_refresh_token', response.data.refresh_token);",
+                  "    pm.environment.set('admin_user_id', response.data.user.id);",
+                  "    console.log('Admin login successful! Token saved as admin_token');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Customer Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('customer_token', response.data.access_token);",
+                  "    pm.environment.set('customer_refresh_token', response.data.refresh_token);",
+                  "    pm.environment.set('customer_user_id', response.data.user.id);",
+                  "    console.log('Customer login successful! Token saved as customer_token');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"customer@example.com\",\n    \"password\": \"customer123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quick System Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/setup/health",
+              "host": ["{{base_url}}"],
+              "path": ["setup", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Products (Quick Test)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products?per_page=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -1240,43 +1729,93 @@
   "variable": [
     {
       "key": "base_url",
+      "value": "https://ecommerce-api-2owr.onrender.com",
+      "type": "string",
+      "description": "Production API base URL"
+    },
+    {
+      "key": "local_url",
       "value": "http://localhost:5001",
-      "type": "string"
+      "type": "string",
+      "description": "Local development URL"
     },
     {
       "key": "access_token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "General access token"
     },
     {
       "key": "refresh_token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "General refresh token"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "Admin access token"
+    },
+    {
+      "key": "admin_refresh_token",
+      "value": "",
+      "type": "string",
+      "description": "Admin refresh token"
+    },
+    {
+      "key": "customer_token",
+      "value": "",
+      "type": "string",
+      "description": "Customer access token"
+    },
+    {
+      "key": "customer_refresh_token",
+      "value": "",
+      "type": "string",
+      "description": "Customer refresh token"
     },
     {
       "key": "user_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Current user ID"
+    },
+    {
+      "key": "admin_user_id",
+      "value": "",
+      "type": "string",
+      "description": "Admin user ID"
+    },
+    {
+      "key": "customer_user_id",
+      "value": "",
+      "type": "string",
+      "description": "Customer user ID"
     },
     {
       "key": "product_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Product ID for testing"
     },
     {
       "key": "category_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Category ID for testing"
     },
     {
       "key": "order_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Order ID for testing"
     },
     {
       "key": "address_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Address ID for testing"
     }
   ]
 }
