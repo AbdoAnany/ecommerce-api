@@ -5,7 +5,7 @@ Simple database setup endpoint for manual initialization
 
 from flask import Blueprint, jsonify
 from app import db
-from app.models import User, Product, Category, Order, OrderItem, CartItem
+from app.models import User, Product, Category, Order, OrderItem, CartItem, UserRole
 from werkzeug.security import generate_password_hash
 import os
 
@@ -37,7 +37,7 @@ def init_database():
             password_hash=generate_password_hash('admin123'),
             first_name='Admin',
             last_name='User',
-            role='admin',
+            role=UserRole.ADMIN,
             is_active=True,
             is_verified=True
         )

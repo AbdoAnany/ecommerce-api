@@ -6,7 +6,7 @@ Database initialization script for production deployments
 import os
 import sys
 from app import create_app
-from app.models import db, User, Product, Category, Order, OrderItem, CartItem
+from app.models import db, User, Product, Category, Order, OrderItem, CartItem, UserRole
 from werkzeug.security import generate_password_hash
 
 def init_database():
@@ -33,7 +33,7 @@ def init_database():
                     password_hash=generate_password_hash('admin123'),
                     first_name='Admin',
                     last_name='User',
-                    role='admin',
+                    role=UserRole.ADMIN,
                     is_active=True,
                     is_verified=True
                 )
