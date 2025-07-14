@@ -18,5 +18,8 @@ echo $response | python3 -m json.tool
 
 echo -e "\n🧪 Testing products endpoint..."
 curl -s $URL/api/v1/products | python3 -m json.tool
-
+mkdir -p migrations/versions
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
 echo -e "\n✅ Setup complete! Your API is ready at: $URL"
