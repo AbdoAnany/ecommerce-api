@@ -11,13 +11,23 @@ This module contains all Marshmallow schemas for Product operations:
 """
 
 from marshmallow import Schema, fields, validate, validates, ValidationError
-from app.models import Product, Category
+from app.models import Product
 
+# ✅ Custom field for multilingual support
+class MultilingualField(fields.Field):
+    def _deserialize(self, value, attr, data, **kwargs):
+        if not isinstance(value, dict) or 'en' not in value or 'ar' not in value:
+            raise ValidationError("Must be a dictionary with 'en' and 'ar' keys.")
+        return value
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        return value
+
+# ✅ Product Create Schema
 class ProductCreateSchema(Schema):
-    """Schema for creating new products with validation"""
-    
-    # Required fields
-    name_en = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    name = MultilingualField(required=True)
+    description = MultilingualField()
+    short_description = MultilingualField()
     sku = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     price = fields.Decimal(required=True, validate=validate.Range(min=0))
     category_id = fields.Int(required=True)
@@ -52,57 +62,25 @@ class ProductCreateSchema(Schema):
     is_organic = fields.Bool()
     is_digital = fields.Bool()
     requires_shipping = fields.Bool()
-    
-    # SEO fields
-    meta_title = fields.Str(validate=validate.Length(max=200))
-    meta_description = fields.Str(validate=validate.Length(max=500))
+    meta_title = MultilingualField()
+    meta_description = MultilingualField()
     slug = fields.Str(validate=validate.Length(max=200))
     
     # Classification
     tags = fields.List(fields.Str())
-    brand = fields.Str(validate=validate.Length(max=100))
-    
-    # Additional attributes
-    currency = fields.Str(validate=validate.Length(max=3))
-    availability = fields.Str(validate=validate.Length(max=20))
-    unit_measure_en = fields.Str(validate=validate.Length(max=50))
-    unit_measure_ar = fields.Str(validate=validate.Length(max=50))
-    unit_value = fields.Decimal(validate=validate.Range(min=0))
-    package_type = fields.Str(validate=validate.Length(max=50))
-    country_of_origin = fields.Str(validate=validate.Length(max=100))
-    
-    # Detailed info
-    ingredients = fields.Str()
-    usage_instructions_en = fields.Str()
-    usage_instructions_ar = fields.Str()
-    warnings_en = fields.Str()
-    warnings_ar = fields.Str()
-    
-    # Quantity constraints
-    min_qty = fields.Int(validate=validate.Range(min=1))
-    step_qty = fields.Int(validate=validate.Range(min=1))
-    max_qty = fields.Int(validate=validate.Range(min=1))
-    
+    image_urls = fields.List(fields.Url(), required=False)
+
     @validates('sku')
     def validate_sku(self, value):
         existing_product = Product.query.filter_by(sku=value).first()
         if existing_product:
             raise ValidationError('SKU already exists.')
-    
-    @validates('category_id')
-    def validate_category_id(self, value):
-        if value is not None:
-            category = Category.query.get(value)
-            if not category:
-                raise ValidationError('Category does not exist.')
 
+# ✅ Product Update Schema
 class ProductUpdateSchema(Schema):
-    """Schema for updating existing products - all fields optional"""
-    name_en = fields.Str(validate=validate.Length(min=1, max=200))
-    name_ar = fields.Str(validate=validate.Length(max=200))
-    description_en = fields.Str()
-    description_ar = fields.Str()
-    short_description = fields.Str(validate=validate.Length(max=500))
+    name = MultilingualField()
+    description = MultilingualField()
+    short_description = MultilingualField()
     sku = fields.Str(validate=validate.Length(min=1, max=100))
     price = fields.Decimal(validate=validate.Range(min=0))
     discount_price = fields.Decimal(validate=validate.Range(min=0))
@@ -119,28 +97,13 @@ class ProductUpdateSchema(Schema):
     is_organic = fields.Bool()
     is_digital = fields.Bool()
     requires_shipping = fields.Bool()
-    meta_title = fields.Str(validate=validate.Length(max=200))
-    meta_description = fields.Str(validate=validate.Length(max=500))
+    meta_title = MultilingualField()
+    meta_description = MultilingualField()
     slug = fields.Str(validate=validate.Length(max=200))
     category_id = fields.Int()
     tags = fields.List(fields.Str())
-    brand = fields.Str(validate=validate.Length(max=100))
-    currency = fields.Str(validate=validate.Length(max=3))
-    availability = fields.Str(validate=validate.Length(max=20))
-    unit_measure_en = fields.Str(validate=validate.Length(max=50))
-    unit_measure_ar = fields.Str(validate=validate.Length(max=50))
-    unit_value = fields.Decimal(validate=validate.Range(min=0))
-    package_type = fields.Str(validate=validate.Length(max=50))
-    country_of_origin = fields.Str(validate=validate.Length(max=100))
-    ingredients = fields.Str()
-    usage_instructions_en = fields.Str()
-    usage_instructions_ar = fields.Str()
-    warnings_en = fields.Str()
-    warnings_ar = fields.Str()
-    min_qty = fields.Int(validate=validate.Range(min=1))
-    step_qty = fields.Int(validate=validate.Range(min=1))
-    max_qty = fields.Int(validate=validate.Range(min=1))
-    
+    image_urls = fields.List(fields.Url(), required=False)
+
     @validates('sku')
     def validate_sku(self, value):
         product_id = self.context.get('product_id')
@@ -148,6 +111,7 @@ class ProductUpdateSchema(Schema):
         if existing_product and existing_product.id != product_id:
             raise ValidationError('SKU already exists.')
 
+# ✅ Image schema
 class ProductImageSchema(Schema):
     id = fields.Int()
     url = fields.Str()
@@ -155,15 +119,16 @@ class ProductImageSchema(Schema):
     is_primary = fields.Bool()
     sort_order = fields.Int()
 
+# ✅ Tag schema
 class ProductTagSchema(Schema):
     id = fields.Int()
     name = fields.Str()
 
+# ✅ List schema
 class ProductListSchema(Schema):
     id = fields.Int()
-    name_en = fields.Str()
-    name_ar = fields.Str()
-    short_description = fields.Str()
+    name = MultilingualField()
+    short_description = MultilingualField()
     sku = fields.Str()
     price = fields.Decimal()
     discount_price = fields.Decimal()
@@ -180,16 +145,16 @@ class ProductListSchema(Schema):
     average_rating = fields.Method('get_average_rating')
     review_count = fields.Method('get_review_count')
     created_at = fields.DateTime()
-    
+
     def get_is_in_stock(self, obj):
         return obj.is_in_stock()
-    
+
     def get_is_low_stock(self, obj):
         return obj.is_low_stock()
-    
+
     def get_main_image(self, obj):
         return obj.get_main_image()
-    
+
     def get_category(self, obj):
         if obj.category:
             return {
@@ -198,20 +163,19 @@ class ProductListSchema(Schema):
                 'slug': obj.category.slug
             }
         return None
-    
+
     def get_average_rating(self, obj):
         return obj.get_average_rating()
-    
+
     def get_review_count(self, obj):
         return obj.get_review_count()
 
+# ✅ Detail schema
 class ProductDetailSchema(Schema):
     id = fields.Int()
-    name_en = fields.Str()
-    name_ar = fields.Str()
-    description_en = fields.Str()
-    description_ar = fields.Str()
-    short_description = fields.Str()
+    name = MultilingualField()
+    description = MultilingualField()
+    short_description = MultilingualField()
     sku = fields.Str()
     price = fields.Decimal()
     discount_price = fields.Decimal()
@@ -228,8 +192,8 @@ class ProductDetailSchema(Schema):
     is_organic = fields.Bool()
     is_digital = fields.Bool()
     requires_shipping = fields.Bool()
-    meta_title = fields.Str()
-    meta_description = fields.Str()
+    meta_title = MultilingualField()
+    meta_description = MultilingualField()
     slug = fields.Str()
     brand = fields.Str()
     currency = fields.Str()
@@ -256,13 +220,13 @@ class ProductDetailSchema(Schema):
     review_count = fields.Method('get_review_count')
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
-    
+
     def get_is_in_stock(self, obj):
         return obj.is_in_stock()
-    
+
     def get_is_low_stock(self, obj):
         return obj.is_low_stock()
-    
+
     def get_category(self, obj):
         if obj.category:
             return {
@@ -272,9 +236,9 @@ class ProductDetailSchema(Schema):
                 'description': obj.category.description_en
             }
         return None
-    
+
     def get_average_rating(self, obj):
         return obj.get_average_rating()
-    
+
     def get_review_count(self, obj):
         return obj.get_review_count()
