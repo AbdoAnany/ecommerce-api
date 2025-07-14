@@ -23,3 +23,5 @@ flask db init
 flask db migrate -m "Initial migration"
 flask db upgrade
 echo -e "\n✅ Setup complete! Your API is ready at: $URL"
+exec gunicorn app:app
+
