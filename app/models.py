@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from enum import Enum
 import uuid
+from sqlalchemy import JSON
 
 class UserRole(Enum):
     ADMIN = "admin"
@@ -65,23 +66,21 @@ class User(db.Model):
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
+    name_alt = db.Column(db.String(100))  # New field
     description = db.Column(db.Text)
-    slug = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    slug = db.Column(db.String(150), unique=True, nullable=False)
     image_url = db.Column(db.String(255))
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    thumbnail = db.Column(db.String(255))  # New field
     sort_order = db.Column(db.Integer, default=0)
-    parent_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
-    # Self-referential relationship for hierarchical categories
+    parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, onupdate=datetime.now(timezone.utc))
+
+    # Relationships
     parent = db.relationship('Category', remote_side=[id], backref='children')
     products = db.relationship('Product', backref='category', lazy=True)
-    
-    def __repr__(self):
-        return f'<Category {self.name}>'
-
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
@@ -90,57 +89,73 @@ class Tag(db.Model):
     def __repr__(self):
         return f'<Tag {self.name}>'
 
+
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    short_description = db.Column(db.String(500))
+    
+    # Localized names and descriptions
+    name = db.Column(JSON, nullable=False)  # {"en": "Name", "ar": "اسم"}
+    description = db.Column(JSON)           # {"en": "...", "ar": "..."}
+    short_description = db.Column(JSON)     # Optional short description
+
     sku = db.Column(db.String(100), unique=True, nullable=False, index=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    compare_price = db.Column(db.Numeric(10, 2))  # Original price for discounts
+    compare_price = db.Column(db.Numeric(10, 2))  # Original price for discount
     cost_price = db.Column(db.Numeric(10, 2))
+
     stock_quantity = db.Column(db.Integer, default=0, nullable=False)
     low_stock_threshold = db.Column(db.Integer, default=10)
+
     weight = db.Column(db.Numeric(8, 2))
-    dimensions = db.Column(db.String(100))  # e.g., "10x5x3 cm"
+    dimensions = db.Column(db.String(100))  # "10x5x3 cm"
+
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_featured = db.Column(db.Boolean, default=False, nullable=False)
     is_digital = db.Column(db.Boolean, default=False, nullable=False)
     requires_shipping = db.Column(db.Boolean, default=True, nullable=False)
+
     meta_title = db.Column(db.String(200))
     meta_description = db.Column(db.String(500))
     slug = db.Column(db.String(200), unique=True, nullable=False, index=True)
+
+    thumbnail = db.Column(db.String(255))  # Main image link
+    unit_value = db.Column(db.Integer, default=1)
+    unit_measure = db.Column(JSON)         # {"en": "piece", "ar": "قطعة"}
+
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     # Relationships
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
     tags = db.relationship('Tag', secondary=product_tags, backref=db.backref('products', lazy=True))
     cart_items = db.relationship('CartItem', backref='product', lazy=True)
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
     reviews = db.relationship('Review', backref='product', lazy=True, cascade='all, delete-orphan')
-    
+
     def get_average_rating(self):
         if not self.reviews:
             return 0
         return sum(review.rating for review in self.reviews) / len(self.reviews)
-    
+
     def get_review_count(self):
         return len(self.reviews)
-    
+
     def is_in_stock(self):
         return self.stock_quantity > 0
-    
+
     def is_low_stock(self):
         return self.stock_quantity <= self.low_stock_threshold
-    
+
     def get_main_image(self):
         main_image = next((img for img in self.images if img.is_primary), None)
-        return main_image.url if main_image else None
-    
+        return main_image.url if main_image else self.thumbnail
+
     def __repr__(self):
-        return f'<Product {self.name}>'
+        return f'<Product {self.name.get("en") if isinstance(self.name, dict) else self.name}>'
+
 
 class ProductImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -150,10 +165,9 @@ class ProductImage(db.Model):
     is_primary = db.Column(db.Boolean, default=False, nullable=False)
     sort_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
+
     def __repr__(self):
         return f'<ProductImage {self.url}>'
-
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
