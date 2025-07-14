@@ -18,7 +18,7 @@ services:
         fromDatabaseSecret: DATABASE_URL
       - key: FLASK_APP
         value: wsgi.py
-    postDeployCommand: flask db upgrade
+    postDeployCommand: flask db migrate -m "Update" && flask db upgrade
 
 databases:
   - name: ecommerce-db
