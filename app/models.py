@@ -82,7 +82,7 @@ class Category(db.Model):
 
     # Relationships
     parent = db.relationship('Category', remote_side=[id], backref='children')
-    products = db.relationship('Product', backref='category', lazy=True)
+    # Remove duplicate products relationship since it's defined in Product model
     # brands = db.relationship('Brand', secondary=category_brands, backref='categories')  # Uncomment if you have a Brand model
 
     @property
