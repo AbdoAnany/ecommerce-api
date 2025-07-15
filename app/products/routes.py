@@ -103,13 +103,13 @@ def get_products():
     # Stock filter
     if in_stock is not None:
         if in_stock:
-            query = query.filter(Product.stock_quantity > 0)
+            query = query.filter(Product.stock > 0)
         else:
-            query = query.filter(Product.stock_quantity == 0)
+            query = query.filter(Product.stock == 0)
     
     # Featured filter
     if featured is not None:
-        query = query.filter_by(is_featured=featured)
+        query = query.filter_by(featured=featured)
     
     # Tags filter
     if tags and tags[0]:  # Check if tags list is not empty
@@ -383,12 +383,12 @@ def update_stock(product_id):
         return jsonify({'error': 'Product not found'}), 404
     
     data = request.get_json()
-    new_stock = data.get('stock_quantity')
+    new_stock = data.get('stock')
     
     if new_stock is None or new_stock < 0:
         return jsonify({'error': 'Invalid stock quantity'}), 400
     
-    product.stock_quantity = new_stock
+    product.stock = new_stock
     product.updated_at = datetime.now(timezone.utc)
     
     try:
@@ -397,7 +397,7 @@ def update_stock(product_id):
             'message': 'Stock updated successfully',
             'data': {
                 'product_id': product.id,
-                'stock_quantity': product.stock_quantity,
+                'stock': product.stock,
                 'is_in_stock': product.is_in_stock(),
                 'is_low_stock': product.is_low_stock()
             }
@@ -414,7 +414,7 @@ def get_featured_products():
     
     products = Product.query.filter_by(
         is_active=True, 
-        is_featured=True
+        featured=True
     ).order_by(Product.created_at.desc()).limit(limit).all()
     
     schema = ProductListSchema()
@@ -573,7 +573,7 @@ def bulk_update_products():
         return jsonify({'error': 'Product IDs and updates are required'}), 400
     
     # Validate updates
-    allowed_fields = ['is_active', 'is_featured', 'category_id', 'stock_quantity']
+    allowed_fields = ['is_active', 'featured', 'category_id', 'stock']
     invalid_fields = [field for field in updates.keys() if field not in allowed_fields]
     
     if invalid_fields:
