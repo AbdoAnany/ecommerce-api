@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 from sqlalchemy import or_, and_
 from app.products import bp
 from app.products.schemas import (
-    ProductCreateSchema, ProductUpdateSchema, 
-    ProductListSchema, ProductDetailSchema
+    ProductCreateSchema, ProductUpdateSchema,
+    ProductDetailSchema, ProductListSchema,
+    ProductImageSchema, ProductTagSchema
 )
 from app.models import Product, Category, Tag, User, UserRole
 from app import db
@@ -139,7 +140,8 @@ def get_products():
         page=page, per_page=per_page, error_out=False
     )
     
-    schema = ProductListSchema()
+    lang = request.args.get('lang', 'en')
+    schema = ProductListSchema(context={'lang': lang})
     return jsonify({
         'message': 'Products retrieved successfully',
         'data': schema.dump(products.items, many=True),
@@ -170,7 +172,8 @@ def get_product(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
-    schema = ProductDetailSchema()
+    lang = request.args.get('lang', 'en')
+    schema = ProductDetailSchema(context={'lang': lang})
     return jsonify({
         'message': 'Product retrieved successfully',
         'data': schema.dump(product)
@@ -184,7 +187,8 @@ def get_product_by_slug(slug):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
-    schema = ProductDetailSchema()
+    lang = request.args.get('lang', 'en')
+    schema = ProductDetailSchema(context={'lang': lang})
     return jsonify({
         'message': 'Product retrieved successfully',
         'data': schema.dump(product)
@@ -223,6 +227,25 @@ def create_product():
     # Handle image URLs - extract from data if present
     image_urls = data.pop('image_urls', [])
     
+    # Handle multilingual fields
+    name_data = {
+        'en': data.get('name', ''),
+        'ar': data.get('name_ar', data.get('name', ''))
+    }
+    data['name'] = name_data
+
+    description_data = {
+        'en': data.get('description', ''),
+        'ar': data.get('description_ar', data.get('description', ''))
+    }
+    data['description'] = description_data
+
+    unit_measure_data = {
+        'en': data.get('unitMeasure', ''),
+        'ar': data.get('unitMeasure_ar', data.get('unitMeasure', ''))
+    }
+    data['unitMeasure'] = unit_measure_data
+
     # Create product
     product = Product(**data)
     
@@ -258,7 +281,7 @@ def create_product():
         db.session.add(product)
         db.session.commit()
         
-        schema = ProductDetailSchema()
+        schema = ProductDetailSchema(context={'lang': 'en'})
         return jsonify({
             'message': 'Product created successfully',
             'data': schema.dump(product)
@@ -298,6 +321,32 @@ def update_product(product_id):
     # Handle image URLs
     image_urls = data.pop('image_urls', None)
     
+    # Update product fields
+    # Handle multilingual fields
+    if 'name' in data or 'name_ar' in data:
+        current_name = product.name if isinstance(product.name, dict) else {'en': product.name, 'ar': product.name}
+        name_data = {
+            'en': data.get('name', current_name['en']),
+            'ar': data.get('name_ar', current_name['ar'])
+        }
+        data['name'] = name_data
+
+    if 'description' in data or 'description_ar' in data:
+        current_desc = product.description if isinstance(product.description, dict) else {'en': product.description, 'ar': product.description}
+        description_data = {
+            'en': data.get('description', current_desc.get('en', '')),
+            'ar': data.get('description_ar', current_desc.get('ar', ''))
+        }
+        data['description'] = description_data
+
+    if 'unitMeasure' in data or 'unitMeasure_ar' in data:
+        current_unit = product.unitMeasure if isinstance(product.unitMeasure, dict) else {'en': product.unitMeasure, 'ar': product.unitMeasure}
+        unit_measure_data = {
+            'en': data.get('unitMeasure', current_unit.get('en', '')),
+            'ar': data.get('unitMeasure_ar', current_unit.get('ar', ''))
+        }
+        data['unitMeasure'] = unit_measure_data
+
     # Update product fields
     for field, value in data.items():
         if hasattr(product, field):

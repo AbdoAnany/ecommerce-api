@@ -94,12 +94,14 @@ class ProductListSchema(Schema):
 
     def get_category(self, obj):
         if obj.category:
+            lang = self.context.get('lang', 'en')
             return {
                 'id': obj.category.id,
-                'name': obj.category.name,
-                'name_alt': getattr(obj.category, 'name_alt', None),
+                'name': obj.category.get_name(lang),
+                'name_all': obj.category.name,
                 'slug': obj.category.slug,
-                'thumbnail': obj.category.thumbnail
+                'description': obj.category.get_description(lang),
+                'description_all': obj.category.description
             }
         return None
 
@@ -133,13 +135,14 @@ class ProductDetailSchema(Schema):
 
     def get_category(self, obj):
         if obj.category:
+            lang = self.context.get('lang', 'en')
             return {
                 'id': obj.category.id,
-                'name': obj.category.name,
-                'name_alt': getattr(obj.category, 'name_alt', None),
+                'name': obj.category.get_name(lang),
+                'name_all': obj.category.name,
                 'slug': obj.category.slug,
-                'thumbnail': obj.category.thumbnail,
-                'description': obj.category.description
+                'description': obj.category.get_description(lang),
+                'description_all': obj.category.description
             }
         return None
 
