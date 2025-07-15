@@ -66,8 +66,8 @@ class User(db.Model):
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
+    name = db.Column(JSON, nullable=False)  # {"en": "...", "ar": "..."}
+    description = db.Column(JSON)  # {"en": "...", "ar": "..."}
     slug = db.Column(db.String(150), unique=True, nullable=False)
     image_url = db.Column(db.String(255))
     sort_order = db.Column(db.Integer, default=0)
@@ -85,8 +85,34 @@ class Category(db.Model):
     def products_count(self):
         return len(self.products)
 
+    def get_name(self, lang='en'):
+        """Get the category name in the specified language"""
+        if isinstance(self.name, dict):
+            return self.name.get(lang, self.name.get('en', ''))
+        return self.name or ''
+
+    def get_description(self, lang='en'):
+        """Get the category description in the specified language"""
+        if isinstance(self.description, dict):
+            return self.description.get(lang, self.description.get('en', ''))
+        return self.description or ''
+
+    def set_name(self, name_en, name_ar=None):
+        """Set the category name in English and optionally Arabic"""
+        self.name = {
+            'en': name_en,
+            'ar': name_ar or name_en
+        }
+
+    def set_description(self, desc_en, desc_ar=None):
+        """Set the category description in English and optionally Arabic"""
+        self.description = {
+            'en': desc_en,
+            'ar': desc_ar or desc_en
+        }
+
     def __repr__(self):
-        return f'<Category {self.name}>'
+        return f'<Category {self.get_name("en")}>'
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -122,6 +148,45 @@ class Product(db.Model):
     cart_items = db.relationship('CartItem', backref='product', lazy=True)
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
     reviews = db.relationship('Review', backref='product', lazy=True, cascade='all, delete-orphan')
+
+    def get_name(self, lang='en'):
+        """Get the product name in the specified language"""
+        if isinstance(self.name, dict):
+            return self.name.get(lang, self.name.get('en', ''))
+        return self.name or ''
+
+    def get_description(self, lang='en'):
+        """Get the product description in the specified language"""
+        if isinstance(self.description, dict):
+            return self.description.get(lang, self.description.get('en', ''))
+        return self.description or ''
+
+    def get_unit_measure(self, lang='en'):
+        """Get the unit measure in the specified language"""
+        if isinstance(self.unitMeasure, dict):
+            return self.unitMeasure.get(lang, self.unitMeasure.get('en', ''))
+        return self.unitMeasure or ''
+
+    def set_name(self, name_en, name_ar=None):
+        """Set the product name in English and optionally Arabic"""
+        self.name = {
+            'en': name_en,
+            'ar': name_ar or name_en
+        }
+
+    def set_description(self, desc_en, desc_ar=None):
+        """Set the product description in English and optionally Arabic"""
+        self.description = {
+            'en': desc_en,
+            'ar': desc_ar or desc_en
+        }
+
+    def set_unit_measure(self, unit_en, unit_ar=None):
+        """Set the unit measure in English and optionally Arabic"""
+        self.unitMeasure = {
+            'en': unit_en,
+            'ar': unit_ar or unit_en
+        }
 
     def get_average_rating(self):
         if not self.reviews:

@@ -42,11 +42,31 @@ def init_database():
                 # Create sample categories
                 print("📁 Creating sample categories...")
                 categories = [
-                    Category(name='Electronics', description='Electronic devices and gadgets', slug='electronics'),
-                    Category(name='Clothing', description='Fashion and apparel', slug='clothing'),
-                    Category(name='Books', description='Books and literature', slug='books'),
-                    Category(name='Home & Garden', description='Home improvement and gardening', slug='home-garden'),
-                    Category(name='Sports', description='Sports and outdoor equipment', slug='sports')
+                    Category(
+                        name={'en': 'Electronics', 'ar': 'إلكترونيات'},
+                        description={'en': 'Electronic devices and gadgets', 'ar': 'الأجهزة والمعدات الإلكترونية'},
+                        slug='electronics'
+                    ),
+                    Category(
+                        name={'en': 'Clothing', 'ar': 'ملابس'},
+                        description={'en': 'Fashion and apparel', 'ar': 'الأزياء والملابس'},
+                        slug='clothing'
+                    ),
+                    Category(
+                        name={'en': 'Books', 'ar': 'كتب'},
+                        description={'en': 'Books and literature', 'ar': 'الكتب والأدب'},
+                        slug='books'
+                    ),
+                    Category(
+                        name={'en': 'Home & Garden', 'ar': 'المنزل والحديقة'},
+                        description={'en': 'Home improvement and gardening', 'ar': 'تحسين المنزل والبستنة'},
+                        slug='home-garden'
+                    ),
+                    Category(
+                        name={'en': 'Sports', 'ar': 'رياضة'},
+                        description={'en': 'Sports and outdoor equipment', 'ar': 'معدات رياضية وخارجية'},
+                        slug='sports'
+                    )
                 ]
                 
                 for category in categories:
@@ -59,11 +79,11 @@ def init_database():
                 print("📦 Creating sample products...")
                 products = [
                     Product(
-                        name='iPhone 15',
-                        description='Latest Apple smartphone with advanced features',
+                        name={'en': 'iPhone 15', 'ar': 'آيفون 15'},
+                        description={'en': 'Latest Apple smartphone with advanced features', 'ar': 'أحدث هاتف ذكي من آبل مع ميزات متقدمة'},
                         sku='IPHONE15-001',
                         price=999.99,
-                        stock_quantity=50,
+                        quantity=50,
                         category_id=1,
                         is_active=True
                     ),
