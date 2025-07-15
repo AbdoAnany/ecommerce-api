@@ -117,8 +117,10 @@ class Product(db.Model):
     unitValue = db.Column(db.Integer, default=1)
     createdAt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     low_stock_threshold = db.Column(db.Integer, default=10)  # Optional, for is_low_stock
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
 
     # Relationships
+    category = db.relationship('Category', backref='products', lazy=True)
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
     tags = db.relationship('Tag', secondary=product_tags, backref=db.backref('products', lazy=True))
     cart_items = db.relationship('CartItem', backref='product', lazy=True)
