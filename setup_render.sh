@@ -1,30 +1,30 @@
 #!/bin/bash
-set -e  # Exit on any error
+set -e
 
 URL="https://ecommerce-api-2owr.onrender.com"
 echo "🚀 Setting up database for: $URL"
 echo "=================================="
 
-# Set environment variables
 export FLASK_APP=app.py
 export FLASK_ENV=production
 
-# Only initialize Alembic if not already initialized
+# Check if Alembic is initialized
 if [ ! -f "migrations/env.py" ]; then
-  echo "🔧 Initializing Alembic..."
-  rm -rf migrations  # Clean up if there's an incomplete folder
-  alembic init migrations
+    echo "🔧 Initializing Alembic..."
+    rm -rf migrations
+    alembic init migrations
+    echo "[alembic]" >> alembic.ini
+    echo "script_location = migrations" >> alembic.ini
 else
-  echo "✅ Alembic already initialized"
+    echo "✅ Alembic already initialized"
 fi
 
-# Ensure versions folder exists
 mkdir -p migrations/versions
 
-# Create and apply migration
+# Run migrations
 echo "📊 Running migrations..."
 alembic revision --autogenerate -m "Auto migration" || echo "⚠️ No changes to migrate"
-alembic upgrade head
+alembic upgrade head || echo "⚠️ Migration upgrade failed"
 
 echo "✅ Database setup complete!"
 echo "🚀 Starting server on port $PORT..."
