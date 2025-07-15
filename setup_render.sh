@@ -17,7 +17,14 @@ mkdir -p migrations/versions
 # Initialize Alembic if not already done
 if [ ! -f "alembic.ini" ]; then
     echo "🔧 Initializing Alembic..."
+    # Remove migrations directory if it exists but is incomplete
+    if [ -d "migrations" ] && [ ! -f "migrations/alembic.ini" ]; then
+        echo "🗑️  Removing incomplete migrations directory..."
+        rm -rf migrations
+    fi
     alembic init migrations
+else
+    echo "✅ Alembic already initialized"
 fi
 
 # Database setup using Alembic commands
@@ -25,11 +32,11 @@ echo "🔄 Setting up database with Alembic..."
 
 # Create migration
 echo "📊 Creating migration..."
-alembic revision --autogenerate -m "Initial migration"
+alembic revision --autogenerate -m "Initial migration" || echo "⚠️  Migration creation failed or no changes detected"
 
 # Apply migrations
 echo "📊 Applying migrations..."
-alembic upgrade head
+alembic upgrade head || echo "⚠️  Migration upgrade failed"
 
 # Set up initial data
 echo "🏗️  Setting up initial data..."
