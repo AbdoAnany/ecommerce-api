@@ -37,9 +37,11 @@ if __name__ == '__main__':
     print(f"🌍 Environment: {os.environ.get('FLASK_ENV', 'development')}")
     
     # Run the application
-    # Important: bind to 0.0.0.0 for Render deployment
     app.run(
         debug=debug_mode,
         host='0.0.0.0',
         port=port
     )
+
+# ✅ Expose app for Gunicorn (Render)
+application = app
