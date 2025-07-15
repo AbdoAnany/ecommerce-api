@@ -70,7 +70,6 @@ class Category(db.Model):
     description = db.Column(db.Text)
     slug = db.Column(db.String(150), unique=True, nullable=False)
     image_url = db.Column(db.String(255))
-    thumbnail = db.Column(db.String(255))
     sort_order = db.Column(db.Integer, default=0)
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
