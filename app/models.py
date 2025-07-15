@@ -67,20 +67,31 @@ class User(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    name_alt = db.Column(db.String(100))  # New field
+    name_alt = db.Column(db.String(100))
     description = db.Column(db.Text)
     slug = db.Column(db.String(150), unique=True, nullable=False)
     image_url = db.Column(db.String(255))
-    thumbnail = db.Column(db.String(255))  # New field
+    thumbnail = db.Column(db.String(255))
     sort_order = db.Column(db.Integer, default=0)
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    stock = db.Column(db.Integer, default=0)  # New: category stock
+    breadcrumbs = db.Column(JSON)  # New: category breadcrumbs
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, onupdate=datetime.now(timezone.utc))
 
     # Relationships
     parent = db.relationship('Category', remote_side=[id], backref='children')
     products = db.relationship('Product', backref='category', lazy=True)
+    # brands = db.relationship('Brand', secondary=category_brands, backref='categories')  # Uncomment if you have a Brand model
+
+    @property
+    def products_count(self):
+        return len(self.products)
+
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
@@ -93,40 +104,19 @@ class Tag(db.Model):
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Localized names and descriptions
-    name = db.Column(JSON, nullable=False)  # {"en": "Name", "ar": "اسم"}
-    description = db.Column(JSON)           # {"en": "...", "ar": "..."}
-    short_description = db.Column(JSON)     # Optional short description
-
+    name = db.Column(JSON, nullable=False)  # {"en": "...", "ar": "..."}
+    description = db.Column(JSON)
+    thumbnail = db.Column(db.String(255))
     sku = db.Column(db.String(100), unique=True, nullable=False, index=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    compare_price = db.Column(db.Numeric(10, 2))  # Original price for discount
-    cost_price = db.Column(db.Numeric(10, 2))
-
-    stock_quantity = db.Column(db.Integer, default=0, nullable=False)
-    low_stock_threshold = db.Column(db.Integer, default=10)
-
-    weight = db.Column(db.Numeric(8, 2))
-    dimensions = db.Column(db.String(100))  # "10x5x3 cm"
-
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
-    is_featured = db.Column(db.Boolean, default=False, nullable=False)
-    is_digital = db.Column(db.Boolean, default=False, nullable=False)
-    requires_shipping = db.Column(db.Boolean, default=True, nullable=False)
-
-    meta_title = db.Column(db.String(200))
-    meta_description = db.Column(db.String(500))
-    slug = db.Column(db.String(200), unique=True, nullable=False, index=True)
-
-    thumbnail = db.Column(db.String(255))  # Main image link
-    unit_value = db.Column(db.Integer, default=1)
-    unit_measure = db.Column(JSON)         # {"en": "piece", "ar": "قطعة"}
-
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    discount_price = db.Column(db.Numeric(10, 2), default=0)
+    stock = db.Column(db.Integer, default=0, nullable=False)
+    in_stock = db.Column(db.Boolean, default=True, nullable=False)
+    featured = db.Column(db.Boolean, default=False, nullable=False)
+    unitMeasure = db.Column(JSON)
+    unitValue = db.Column(db.Integer, default=1)
+    createdAt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    low_stock_threshold = db.Column(db.Integer, default=10)  # Optional, for is_low_stock
 
     # Relationships
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade='all, delete-orphan')
@@ -144,10 +134,10 @@ class Product(db.Model):
         return len(self.reviews)
 
     def is_in_stock(self):
-        return self.stock_quantity > 0
+        return self.stock > 0
 
     def is_low_stock(self):
-        return self.stock_quantity <= self.low_stock_threshold
+        return self.stock <= self.low_stock_threshold
 
     def get_main_image(self):
         main_image = next((img for img in self.images if img.is_primary), None)
@@ -388,6 +378,16 @@ class ActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     action = db.Column(db.String(100), nullable=False)
+    resource_type = db.Column(db.String(50))  # product, order, user, etc.
+    resource_id = db.Column(db.Integer)
+    details = db.Column(db.JSON)
+    ip_address = db.Column(db.String(45))
+    user_agent = db.Column(db.String(500))
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    def __repr__(self):
+        return f'<ActivityLog {self.action} by {self.user_id}>'
     resource_type = db.Column(db.String(50))  # product, order, user, etc.
     resource_id = db.Column(db.Integer)
     details = db.Column(db.JSON)

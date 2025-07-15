@@ -15,25 +15,18 @@ class MultilingualField(fields.Field):
 class ProductCreateSchema(Schema):
     name = MultilingualField(required=True)
     description = MultilingualField()
-    short_description = MultilingualField()
+    thumbnail = fields.Str()
     sku = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     price = fields.Decimal(required=True, validate=validate.Range(min=0))
-    compare_price = fields.Decimal(validate=validate.Range(min=0))
-    cost_price = fields.Decimal(validate=validate.Range(min=0))
-    stock_quantity = fields.Int(validate=validate.Range(min=0))
-    low_stock_threshold = fields.Int(validate=validate.Range(min=0))
-    weight = fields.Decimal(validate=validate.Range(min=0))
-    dimensions = fields.Str(validate=validate.Length(max=100))
-    is_active = fields.Bool()
-    is_featured = fields.Bool()
-    is_digital = fields.Bool()
-    requires_shipping = fields.Bool()
-    meta_title = MultilingualField()
-    meta_description = MultilingualField()
-    slug = fields.Str(validate=validate.Length(max=200))
-    category_id = fields.Int()
+    discount_price = fields.Decimal(validate=validate.Range(min=0))
+    stock = fields.Int(validate=validate.Range(min=0))
+    in_stock = fields.Bool()
+    featured = fields.Bool()
+    unitMeasure = MultilingualField()
+    unitValue = fields.Int()
+    createdAt = fields.DateTime()
     tags = fields.List(fields.Str())
-    image_urls = fields.List(fields.Url(), required=False)
+    category_id = fields.Int()
 
     @validates('sku')
     def validate_sku(self, value):
@@ -45,25 +38,18 @@ class ProductCreateSchema(Schema):
 class ProductUpdateSchema(Schema):
     name = MultilingualField()
     description = MultilingualField()
-    short_description = MultilingualField()
+    thumbnail = fields.Str()
     sku = fields.Str(validate=validate.Length(min=1, max=100))
     price = fields.Decimal(validate=validate.Range(min=0))
-    compare_price = fields.Decimal(validate=validate.Range(min=0))
-    cost_price = fields.Decimal(validate=validate.Range(min=0))
-    stock_quantity = fields.Int(validate=validate.Range(min=0))
-    low_stock_threshold = fields.Int(validate=validate.Range(min=0))
-    weight = fields.Decimal(validate=validate.Range(min=0))
-    dimensions = fields.Str(validate=validate.Length(max=100))
-    is_active = fields.Bool()
-    is_featured = fields.Bool()
-    is_digital = fields.Bool()
-    requires_shipping = fields.Bool()
-    meta_title = MultilingualField()
-    meta_description = MultilingualField()
-    slug = fields.Str(validate=validate.Length(max=200))
-    category_id = fields.Int()
+    discount_price = fields.Decimal(validate=validate.Range(min=0))
+    stock = fields.Int(validate=validate.Range(min=0))
+    in_stock = fields.Bool()
+    featured = fields.Bool()
+    unitMeasure = MultilingualField()
+    unitValue = fields.Int()
+    createdAt = fields.DateTime()
     tags = fields.List(fields.Str())
-    image_urls = fields.List(fields.Url(), required=False)
+    category_id = fields.Int()
 
     @validates('sku')
     def validate_sku(self, value):
@@ -89,37 +75,31 @@ class ProductTagSchema(Schema):
 class ProductListSchema(Schema):
     id = fields.Int()
     name = MultilingualField()
-    short_description = MultilingualField()
+    description = MultilingualField()
+    thumbnail = fields.Str()
     sku = fields.Str()
     price = fields.Decimal()
-    compare_price = fields.Decimal()
-    stock_quantity = fields.Int()
-    is_active = fields.Bool()
-    is_featured = fields.Bool()
-    is_in_stock = fields.Method('get_is_in_stock')
-    is_low_stock = fields.Method('get_is_low_stock')
-    main_image = fields.Method('get_main_image')
-    category = fields.Method('get_category')
-    tags = fields.Nested(ProductTagSchema, many=True)
+    discount_price = fields.Decimal()
+    stock = fields.Int()
+    in_stock = fields.Bool()
+    featured = fields.Bool()
+    unitMeasure = MultilingualField()
+    unitValue = fields.Int()
+    createdAt = fields.DateTime()
+    tags = fields.Nested(ProductTagSchema, many=True)  # Updated: nested tags
+    category = fields.Method('get_category')           # Updated: method for category
     average_rating = fields.Method('get_average_rating')
     review_count = fields.Method('get_review_count')
     created_at = fields.DateTime()
-
-    def get_is_in_stock(self, obj):
-        return obj.is_in_stock()
-
-    def get_is_low_stock(self, obj):
-        return obj.is_low_stock()
-
-    def get_main_image(self, obj):
-        return obj.get_main_image()
 
     def get_category(self, obj):
         if obj.category:
             return {
                 'id': obj.category.id,
                 'name': obj.category.name,
-                'slug': obj.category.slug
+                'name_alt': getattr(obj.category, 'name_alt', None),
+                'slug': obj.category.slug,
+                'thumbnail': obj.category.thumbnail
             }
         return None
 
@@ -134,44 +114,31 @@ class ProductDetailSchema(Schema):
     id = fields.Int()
     name = MultilingualField()
     description = MultilingualField()
-    short_description = MultilingualField()
+    thumbnail = fields.Str()
     sku = fields.Str()
     price = fields.Decimal()
-    compare_price = fields.Decimal()
-    cost_price = fields.Decimal()
-    stock_quantity = fields.Int()
-    low_stock_threshold = fields.Int()
-    weight = fields.Decimal()
-    dimensions = fields.Str()
-    is_active = fields.Bool()
-    is_featured = fields.Bool()
-    is_digital = fields.Bool()
-    requires_shipping = fields.Bool()
-    meta_title = MultilingualField()
-    meta_description = MultilingualField()
-    slug = fields.Str()
-    is_in_stock = fields.Method('get_is_in_stock')
-    is_low_stock = fields.Method('get_is_low_stock')
-    images = fields.Nested(ProductImageSchema, many=True)
-    category = fields.Method('get_category')
-    tags = fields.Nested(ProductTagSchema, many=True)
+    discount_price = fields.Decimal()
+    stock = fields.Int()
+    in_stock = fields.Bool()
+    featured = fields.Bool()
+    unitMeasure = MultilingualField()
+    unitValue = fields.Int()
+    createdAt = fields.DateTime()
+    tags = fields.Nested(ProductTagSchema, many=True)  # Updated: nested tags
+    category = fields.Method('get_category')           # Updated: method for category
     average_rating = fields.Method('get_average_rating')
     review_count = fields.Method('get_review_count')
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
-
-    def get_is_in_stock(self, obj):
-        return obj.is_in_stock()
-
-    def get_is_low_stock(self, obj):
-        return obj.is_low_stock()
 
     def get_category(self, obj):
         if obj.category:
             return {
                 'id': obj.category.id,
                 'name': obj.category.name,
+                'name_alt': getattr(obj.category, 'name_alt', None),
                 'slug': obj.category.slug,
+                'thumbnail': obj.category.thumbnail,
                 'description': obj.category.description
             }
         return None
