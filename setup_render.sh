@@ -13,8 +13,13 @@ echo "✅ Old migrations removed"
 export FLASK_APP=app.py
 export FLASK_ENV=production
 
-# 3. Drop all existing tables (optional but recommended for clean state)
-echo "🗑 Dropping all existing tables..."
+# 3. Drop alembic_version table to remove reference to missing revision
+echo "❌ Removing alembic_version table from database..."
+psql "$DATABASE_URL" -c "DROP TABLE IF EXISTS alembic_version CASCADE;"
+echo "✅ alembic_version table dropped"
+
+# 4. Drop all tables from SQLAlchemy
+echo "🗑 Dropping all existing tables via SQLAlchemy..."
 flask shell <<EOF
 from app import create_app, db
 app = create_app()
@@ -23,23 +28,23 @@ with app.app_context():
 EOF
 echo "✅ All tables dropped"
 
-# 4. Initialize fresh migrations
+# 5. Initialize fresh migrations
 echo "🆕 Initializing new migrations..."
 flask db init
 
-# 5. Configure alembic to use DATABASE_URL from environment
+# 6. Configure alembic to use DATABASE_URL from environment
 echo "⚙️  Configuring database connection..."
 sed -i.bak 's|sqlalchemy.url = .*|sqlalchemy.url = ${DATABASE_URL}|' migrations/alembic.ini
 echo "✅ Database connection configured"
 
-# 6. Create and apply initial migration
+# 7. Create and apply initial migration
 echo "🔄 Creating initial migration..."
 flask db migrate -m "Initial migration after reset"
 
 echo "🔼 Applying database migrations..."
 flask db upgrade
 
-# 7. Verify basic database functionality
+# 8. Verify basic database functionality
 echo "🔍 Verifying database connection..."
 python - <<END
 from app import create_app
@@ -57,7 +62,7 @@ with app.app_context():
         exit(1)
 END
 
-# 8. Start the server
+# 9. Start the server
 echo "🚀 Starting Gunicorn server on port ${PORT}"
 exec gunicorn --bind 0.0.0.0:${PORT} \
     --workers 4 \
