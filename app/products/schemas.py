@@ -3,7 +3,7 @@ from app.models import Product
 
 class ProductCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=200))
-    nameAr = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
     descriptionAr = fields.Str()
     short_description = fields.Str(validate=validate.Length(max=500))
