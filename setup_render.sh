@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit on any error
 
 # Quick setup script for your specific Render deployment
 URL="https://ecommerce-api-2owr.onrender.com"
@@ -6,17 +7,32 @@ URL="https://ecommerce-api-2owr.onrender.com"
 echo "🚀 Setting up database for: $URL"
 echo "=================================="
 
-echo "⏳ Waiting for redeploy to complete..."
-sleep 30
+# Set environment variables
+export FLASK_APP=app.py
+export FLASK_ENV=production
 
-echo "🔍 Checking health..."
-curl -s $URL/setup/health | python3 -m json.tool
+# Skip Alembic initialization if migrations directory already exists
+if [ -d "migrations" ]; then
+    echo "✅ Migrations directory already exists, skipping initialization"
+else
+    echo "🔧 Initializing Alembic..."
+    mkdir -p migrations/versions
+    alembic init migrations
+fi
 
-echo -e "\n🔄 Initializing database..."
-response=$(curl -s -X POST $URL/setup/init-db)
-echo $response | python3 -m json.tool
+# Database setup using Alembic commands
+echo "🔄 Setting up database with Alembic..."
 
-echo -e "\n🧪 Testing products endpoint..."
-curl -s $URL/api/v1/products | python3 -m json.tool
+# Create migration (only if we have models to migrate)
+echo "📊 Creating migration..."
+alembic revision --autogenerate -m "Deploy migration" || echo "⚠️  No changes detected"
 
-echo -e "\n✅ Setup complete! Your API is ready at: $URL"
+# Apply migrations
+echo "📊 Applying migrations..."
+alembic upgrade head || echo "⚠️  Migration upgrade completed"
+
+
+echo "🚀 Starting server on port $PORT..."
+
+# Start the server - this MUST be the last command
+exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app
