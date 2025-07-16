@@ -12,13 +12,8 @@ export FLASK_APP=app.py
 export FLASK_ENV=production
 
 # Skip Alembic initialization if migrations directory already exists
-if [ -d "migrations" ]; then
-    echo "✅ Migrations directory already exists, skipping initialization"
-else
-    echo "🔧 Initializing Alembic..."
-    mkdir -p migrations/versions
-    alembic init migrations
-fi
+mkdir -p migrations/versions
+alembic init migrations
 
 # Database setup using Alembic commands
 echo "🔄 Setting up database with Alembic..."
