@@ -11,23 +11,39 @@ echo "=================================="
 export FLASK_APP=app.py
 export FLASK_ENV=production
 
-# Skip Alembic initialization if migrations directory already exists
-mkdir -p migrations/versions
-alembic init migrations
+# Check if migrations directory is properly initialized
+if [ ! -f "migrations/alembic.ini" ]; then
+    echo "🔧 Migrations directory incomplete, reinitializing..."
+    rm -rf migrations
+    flask db init
+    echo "✅ Flask-Migrate initialized"
+elif [ ! -d "migrations" ]; then
+    echo "🔧 Initializing Flask-Migrate..."
+    flask db init
+    echo "✅ Flask-Migrate initialized"
+else
+    echo "✅ Migrations directory already properly initialized"
+fi
 
-# Database setup using Alembic commands
-echo "🔄 Setting up database with Alembic..."
+# Fix alembic.ini to use environment variables instead of hardcoded URL
+echo "🔧 Updating alembic.ini for production..."
+if [ -f "migrations/alembic.ini" ]; then
+    # Comment out the hardcoded sqlalchemy.url line
+    sed -i.bak 's/^sqlalchemy\.url = postgresql:\/\/username:password@localhost:5432\/dbname$/# sqlalchemy.url = postgresql:\/\/username:password@localhost:5432\/dbname/' migrations/alembic.ini
+    echo "✅ Updated alembic.ini to use environment variables"
+fi
+
+# Database setup using Flask-Migrate commands
+echo "🔄 Setting up database with Flask-Migrate..."
 
 # Create migration (only if we have models to migrate)
 echo "📊 Creating migration..."
-alembic revision --autogenerate -m "Deploy migration" || echo "⚠️  No changes detected"
+flask db migrate -m "Deploy migration" || echo "⚠️  No changes detected"
 
 # Apply migrations
 echo "📊 Applying migrations..."
-alembic upgrade head || echo "⚠️  Migration upgrade completed"
-
+flask db upgrade || echo "⚠️  Migration upgrade completed"
 
 echo "🚀 Starting server on port $PORT..."
-gunicorn wsgi:app
 # Start the server - this MUST be the last command
-exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app
+exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 wsgi:app
