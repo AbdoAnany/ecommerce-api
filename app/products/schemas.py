@@ -3,8 +3,11 @@ from app.models import Product
 
 class ProductCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    nameAr = fields.Str(required=True, validate=validate.Length(min=1, max=200))
     description = fields.Str()
+    descriptionAr = fields.Str()
     short_description = fields.Str(validate=validate.Length(max=500))
+    short_descriptionAr = fields.Str(validate=validate.Length(max=500))
     sku = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     price = fields.Decimal(required=True, validate=validate.Range(min=0))
     compare_price = fields.Decimal(validate=validate.Range(min=0))
@@ -31,8 +34,11 @@ class ProductCreateSchema(Schema):
 
 class ProductUpdateSchema(Schema):
     name = fields.Str(validate=validate.Length(min=1, max=200))
+    nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
+    descriptionAr = fields.Str()
     short_description = fields.Str(validate=validate.Length(max=500))
+    short_descriptionAr = fields.Str(validate=validate.Length(max=500))
     sku = fields.Str(validate=validate.Length(min=1, max=100))
     price = fields.Decimal(validate=validate.Range(min=0))
     compare_price = fields.Decimal(validate=validate.Range(min=0))
@@ -72,7 +78,11 @@ class ProductTagSchema(Schema):
 class ProductListSchema(Schema):
     id = fields.Int()
     name = fields.Str()
+    nameAr = fields.Str()
+    description = fields.Str()
+    descriptionAr = fields.Str()
     short_description = fields.Str()
+    short_descriptionAr = fields.Str()
     sku = fields.Str()
     price = fields.Decimal()
     compare_price = fields.Decimal()
@@ -102,6 +112,7 @@ class ProductListSchema(Schema):
             return {
                 'id': obj.category.id,
                 'name': obj.category.name,
+                'nameAr': obj.category.nameAr,
                 'slug': obj.category.slug
             }
         return None
@@ -115,8 +126,11 @@ class ProductListSchema(Schema):
 class ProductDetailSchema(Schema):
     id = fields.Int()
     name = fields.Str()
+    nameAr = fields.Str()
     description = fields.Str()
+    descriptionAr = fields.Str()
     short_description = fields.Str()
+    short_descriptionAr = fields.Str()
     sku = fields.Str()
     price = fields.Decimal()
     compare_price = fields.Decimal()
@@ -153,8 +167,10 @@ class ProductDetailSchema(Schema):
             return {
                 'id': obj.category.id,
                 'name': obj.category.name,
+                'nameAr': obj.category.nameAr,
                 'slug': obj.category.slug,
-                'description': obj.category.description
+                'description': obj.category.description,
+                'descriptionAr': obj.category.descriptionAr
             }
         return None
     

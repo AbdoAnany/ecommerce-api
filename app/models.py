@@ -66,7 +66,10 @@ class User(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
+    nameAr = db.Column(db.String(100), nullable=False, unique=True)
+
     description = db.Column(db.Text)
+    descriptionAr= db.Column(db.Text)
     slug = db.Column(db.String(100), nullable=False, unique=True, index=True)
     image_url = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True, nullable=False)
@@ -93,8 +96,11 @@ class Tag(db.Model):
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    nameAr=db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    descriptionAr = db.Column(db.Text)
     short_description = db.Column(db.String(500))
+    short_descriptionAr = db.Column(db.String(500))
     sku = db.Column(db.String(100), unique=True, nullable=False, index=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     compare_price = db.Column(db.Numeric(10, 2))  # Original price for discounts

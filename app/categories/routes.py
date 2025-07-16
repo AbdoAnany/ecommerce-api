@@ -38,7 +38,9 @@ def get_categories():
         category_data = {
             'id': category.id,
             'name': category.name,
+            'nameAr': category.nameAr,
             'description': category.description,
+            'descriptionAr': category.descriptionAr,
             'slug': category.slug,
             'image_url': category.image_url,
             'sort_order': category.sort_order,
@@ -48,6 +50,9 @@ def get_categories():
                 {
                     'id': child.id,
                     'name': child.name,
+                    'nameAr': child.nameAr,
+                    'description': child.description,
+                    'descriptionAr': child.descriptionAr,
                     'slug': child.slug,
                     'product_count': len(child.products)
                 }
@@ -72,7 +77,9 @@ def get_category(category_id):
     category_data = {
         'id': category.id,
         'name': category.name,
+        'nameAr': category.nameAr,
         'description': category.description,
+        'descriptionAr': category.descriptionAr,
         'slug': category.slug,
         'image_url': category.image_url,
         'sort_order': category.sort_order,
@@ -80,14 +87,17 @@ def get_category(category_id):
         'parent': {
             'id': category.parent.id,
             'name': category.parent.name,
+            'nameAr': category.parent.nameAr,
             'slug': category.parent.slug
         } if category.parent else None,
         'children': [
             {
                 'id': child.id,
                 'name': child.name,
+                'nameAr': child.nameAr,
                 'slug': child.slug,
                 'description': child.description,
+                'descriptionAr': child.descriptionAr,
                 'product_count': len(child.products)
             }
             for child in category.children if child.is_active
@@ -113,7 +123,9 @@ def get_category_by_slug(slug):
     category_data = {
         'id': category.id,
         'name': category.name,
+        'nameAr': category.nameAr,
         'description': category.description,
+        'descriptionAr': category.descriptionAr,
         'slug': category.slug,
         'image_url': category.image_url,
         'sort_order': category.sort_order,
@@ -127,8 +139,10 @@ def get_category_by_slug(slug):
             {
                 'id': child.id,
                 'name': child.name,
+                'nameAr': child.nameAr,
                 'slug': child.slug,
                 'description': child.description,
+                'descriptionAr': child.descriptionAr,
                 'product_count': len(child.products)
             }
             for child in category.children if child.is_active
@@ -149,9 +163,10 @@ def create_category():
     data = request.get_json()
     
     # Validation
-    if not data or not data.get('name'):
-        return jsonify({'error': 'Category name is required'}), 400
-    
+    if not data or not data.get('name') or not data.get('nameAr'):
+        return jsonify({'error': 'Category name and nameAr are required'}), 400
+    if len(data['name']) > 100 or len(data['nameAr']) > 100:
+        return jsonify({'error': 'Category name and nameAr must be 100 characters or less'}), 400
     # Generate slug if not provided
     slug = data.get('slug') or generate_slug(data['name'])
     
@@ -174,7 +189,9 @@ def create_category():
     
     category = Category(
         name=data['name'],
+        nameAr=data['nameAr'],
         description=data.get('description'),
+        descriptionAr=data.get('descriptionAr'),
         slug=slug,
         image_url=data.get('image_url'),
         sort_order=data.get('sort_order', 0),
@@ -191,8 +208,10 @@ def create_category():
             'data': {
                 'id': category.id,
                 'name': category.name,
+                'nameAr': category.nameAr,
                 'slug': category.slug,
                 'description': category.description,
+                'descriptionAr': category.descriptionAr,
                 'parent_id': category.parent_id,
                 'sort_order': category.sort_order,
                 'is_active': category.is_active
@@ -220,16 +239,22 @@ def update_category(category_id):
     
     # Update fields
     if 'name' in data:
-        category.name = data['name']
+        category.name = data['name'] 
+        if len(category.name) > 100:
+            return jsonify({'error': 'Category name must be 100 characters or less'}), 400
+        category.nameAr = data.get('nameAr', category.nameAr)
         # Generate new slug if name changed and slug not provided
         if 'slug' not in data:
             new_slug = generate_slug(data['name'])
+
             existing_category = Category.query.filter_by(slug=new_slug).first()
             if not existing_category or existing_category.id == category_id:
                 category.slug = new_slug
     
     if 'description' in data:
         category.description = data['description']
+    if 'descriptionAr' in data:
+        category.descriptionAr = data['descriptionAr']
     
     if 'slug' in data:
         category.slug = data['slug']
@@ -261,8 +286,10 @@ def update_category(category_id):
             'data': {
                 'id': category.id,
                 'name': category.name,
+                'nameAr': category.nameAr,
                 'slug': category.slug,
                 'description': category.description,
+                'descriptionAr': category.descriptionAr,
                 'parent_id': category.parent_id,
                 'sort_order': category.sort_order,
                 'is_active': category.is_active
@@ -314,8 +341,10 @@ def get_category_tree():
             category_data = {
                 'id': category.id,
                 'name': category.name,
+                'nameAr': category.nameAr,
                 'slug': category.slug,
                 'description': category.description,
+                'descriptionAr': category.descriptionAr,
                 'image_url': category.image_url,
                 'sort_order': category.sort_order,
                 'product_count': len(category.products),

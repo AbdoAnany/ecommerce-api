@@ -60,8 +60,11 @@ def get_products():
     if search:
         search_filter = or_(
             Product.name.contains(search),
+            Product.nameAr.contains(search),
             Product.description.contains(search),
+            Product.descriptionAr.contains(search),
             Product.short_description.contains(search),
+            Product.short_descriptionAr.contains(search),
             Product.sku.contains(search)
         )
         query = query.filter(search_filter)
@@ -100,9 +103,9 @@ def get_products():
             query = query.order_by(Product.price.asc())
     elif sort_by == 'name':
         if sort_order == 'desc':
-            query = query.order_by(Product.name.desc())
+            query = query.order_by(Product.name.desc() if Product.nameAr is None else Product.nameAr.desc())
         else:
-            query = query.order_by(Product.name.asc())
+            query = query.order_by(Product.name.asc()  if Product.nameAr is None else Product.nameAr.asc())
     else:  # created_at or default
         if sort_order == 'desc':
             query = query.order_by(Product.created_at.desc())
@@ -239,6 +242,7 @@ def update_product(product_id):
         return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
     
     # Handle slug update
+
     if 'name' in data and 'slug' not in data:
         new_slug = generate_slug(data['name'])
         existing_product = Product.query.filter_by(slug=new_slug).first()
@@ -361,8 +365,11 @@ def search_products():
     # Search in multiple fields
     search_filter = or_(
         Product.name.contains(query_text),
+        Product.nameAr.contains(query_text),
         Product.description.contains(query_text),
+        Product.descriptionAr.contains(query_text),
         Product.short_description.contains(query_text),
+        Product.short_descriptionAr.contains(query_text),
         Product.sku.contains(query_text),
         Product.tags.any(Tag.name.contains(query_text))
     )
