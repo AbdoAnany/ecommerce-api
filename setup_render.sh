@@ -1,49 +1,57 @@
 #!/bin/bash
-set -e  # Exit on any error
+set -e  # Exit immediately if any command fails
 
-# Quick setup script for your specific Render deployment
-URL="https://ecommerce-api-2owr.onrender.com"
+echo "🚀 Starting fresh database setup"
+echo "==============================="
 
-echo "🚀 Setting up database for: $URL"
-echo "=================================="
+# 1. Clean up existing migrations (if any)
+echo "🧹 Cleaning up old migrations..."
+rm -rf migrations/
+echo "✅ Old migrations removed"
 
-# Set environment variables
+# 2. Set environment variables
 export FLASK_APP=app.py
 export FLASK_ENV=production
 
-# Check if migrations directory is properly initialized
-if [ ! -f "migrations/alembic.ini" ]; then
-    echo "🔧 Migrations directory incomplete, reinitializing..."
-    rm -rf migrations
-    flask db init
-    echo "✅ Flask-Migrate initialized"
-elif [ ! -d "migrations" ]; then
-    echo "🔧 Initializing Flask-Migrate..."
-    flask db init
-    echo "✅ Flask-Migrate initialized"
-else
-    echo "✅ Migrations directory already properly initialized"
-fi
+# 3. Initialize fresh migrations
+echo "🆕 Initializing new migrations..."
+flask db init
 
-# Fix alembic.ini to use environment variables instead of hardcoded URL
-echo "🔧 Updating alembic.ini for production..."
-if [ -f "migrations/alembic.ini" ]; then
-    # Comment out the hardcoded sqlalchemy.url line
-    sed -i.bak 's/^sqlalchemy\.url = postgresql:\/\/username:password@localhost:5432\/dbname$/# sqlalchemy.url = postgresql:\/\/username:password@localhost:5432\/dbname/' migrations/alembic.ini
-    echo "✅ Updated alembic.ini to use environment variables"
-fi
+# 4. Configure alembic to use DATABASE_URL from environment
+echo "⚙️  Configuring database connection..."
+sed -i.bak 's|sqlalchemy.url = .*|sqlalchemy.url = ${DATABASE_URL}|' migrations/alembic.ini
+echo "✅ Database connection configured"
 
-# Database setup using Flask-Migrate commands
-echo "🔄 Setting up database with Flask-Migrate..."
+# 5. Create and apply initial migration
+echo "🔄 Creating initial migration..."
+flask db migrate -m "Initial migration after reset"
 
-# Create migration (only if we have models to migrate)
-echo "📊 Creating migration..."
-flask db migrate -m "Deploy migration" || echo "⚠️  No changes detected"
+echo "🔼 Applying database migrations..."
+flask db upgrade
 
-# Apply migrations
-echo "📊 Applying migrations..."
-flask db upgrade || echo "⚠️  Migration upgrade completed"
+# 6. Verify basic database functionality
+echo "🔍 Verifying database connection..."
+python - <<END
+from app import create_app
+from flask_sqlalchemy import SQLAlchemy
 
-echo "🚀 Starting server on port $PORT..."
-# Start the server - this MUST be the last command
-exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 wsgi:app
+app = create_app()
+db = SQLAlchemy(app)
+
+with app.app_context():
+    try:
+        db.session.execute("SELECT 1")
+        print("✅ Database connection verified")
+    except Exception as e:
+        print(f"❌ Database connection failed: {str(e)}")
+        exit(1)
+END
+
+# 7. Start the server
+echo "🚀 Starting Gunicorn server on port ${PORT}"
+exec gunicorn --bind 0.0.0.0:${PORT} \
+    --workers 4 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    wsgi:app
