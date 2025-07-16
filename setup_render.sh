@@ -33,6 +33,6 @@ alembic upgrade head || echo "⚠️  Migration upgrade completed"
 
 
 echo "🚀 Starting server on port $PORT..."
-
+gunicorn wsgi:app
 # Start the server - this MUST be the last command
 exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app
