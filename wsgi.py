@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+from app import create_app
 
-import os
-import sys
+app = create_app()
 
-# Add the project root directory to Python path
+if __name__ == "__main__":
+    app.run()
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
