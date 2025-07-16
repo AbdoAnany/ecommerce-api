@@ -96,7 +96,7 @@ class Tag(db.Model):
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    nameAr=db.Column(db.String(200), nullable=False)
+    nameAr=db.Column(db.String(200), nullable=True)
     description = db.Column(db.Text)
     descriptionAr = db.Column(db.Text)
     short_description = db.Column(db.String(500))
