@@ -66,7 +66,7 @@ class User(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    nameAr = db.Column(db.String(100), nullable=False, unique=True)
+    nameAr = db.Column(db.String(100), nullable=True, )
 
     description = db.Column(db.Text)
     descriptionAr= db.Column(db.Text)
