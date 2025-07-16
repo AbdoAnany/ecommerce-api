@@ -3,6 +3,8 @@ services:
     name: ecommerce-api
     env: python
     plan: free
+    # Note: Render may automatically use Python 3.13
+    # Our requirements.txt is now compatible with Python 3.13
     buildCommand: ./build.sh
     startCommand: gunicorn wsgi:app
     envVars:
@@ -14,11 +16,6 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabaseSecret: DATABASE_URL
-      - key: FLASK_APP
-        value: wsgi.py
-    postDeployCommand: flask db migrate -m "Update" && flask db upgrade
 
 databases:
   - name: ecommerce-db
