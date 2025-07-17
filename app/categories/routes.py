@@ -198,7 +198,12 @@ def create_category():
         parent_id=parent_id,
         is_active=data.get('is_active', True)
     )
-    
+        # Include ID if provided (optional)
+    if 'id' in data:
+        category_fields['id'] = data['id']
+
+    category = Category(**category_fields)
+
     try:
         db.session.add(category)
         db.session.commit()
