@@ -161,45 +161,44 @@ def get_category_by_slug(slug):
 def create_category():
     """Create new category (Admin only)"""
     data = request.get_json()
-    
+
     # Validation
     if not data or not data.get('name') or not data.get('nameAr'):
         return jsonify({'error': 'Category name and nameAr are required'}), 400
     if len(data['name']) > 100 or len(data['nameAr']) > 100:
         return jsonify({'error': 'Category name and nameAr must be 100 characters or less'}), 400
+
     # Generate slug if not provided
     slug = data.get('slug') or generate_slug(data['name'])
-    
-    # Check if slug already exists
-    existing_category = Category.query.filter_by(slug=slug).first()
-    if existing_category:
-        base_slug = slug
-        counter = 1
-        while existing_category:
-            slug = f"{base_slug}-{counter}"
-            existing_category = Category.query.filter_by(slug=slug).first()
-            counter += 1
-    
+
+    # Ensure slug is unique
+    base_slug = slug
+    counter = 1
+    while Category.query.filter_by(slug=slug).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
     # Validate parent category if provided
     parent_id = data.get('parent_id')
     if parent_id:
         parent_category = Category.query.get(parent_id)
         if not parent_category:
             return jsonify({'error': 'Parent category not found'}), 400
-    
-    category = Category(
-        name=data['name'],
-        nameAr=data['nameAr'],
-        description=data.get('description'),
-        descriptionAr=data.get('descriptionAr'),
-        slug=slug,
-        image_url=data.get('image_url'),
-        sort_order=data.get('sort_order', 0),
-        parent_id=parent_id,
-        is_active=data.get('is_active', True)
-    )
-        # Include ID if provided (optional)
-    category_fields = {}
+
+    # Prepare category fields
+    category_fields = {
+        'name': data['name'],
+        'nameAr': data['nameAr'],
+        'description': data.get('description'),
+        'descriptionAr': data.get('descriptionAr'),
+        'slug': slug,
+        'image_url': data.get('image_url'),
+        'sort_order': data.get('sort_order', 0),
+        'parent_id': parent_id,
+        'is_active': data.get('is_active', True)
+    }
+
+    # Include ID if provided (optional, only if you want to set ID manually)
     if 'id' in data:
         category_fields['id'] = data['id']
 
@@ -208,7 +207,7 @@ def create_category():
     try:
         db.session.add(category)
         db.session.commit()
-        
+
         return jsonify({
             'message': 'Category created successfully',
             'data': {
@@ -223,7 +222,7 @@ def create_category():
                 'is_active': category.is_active
             }
         }), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to create category', 'details': str(e)}), 500
