@@ -2,6 +2,7 @@ from marshmallow import Schema, fields, validate, validates, ValidationError
 from app.models import Product
 
 class ProductCreateSchema(Schema):
+    id = fields.Int(required=False)  # ✅ Add this line to allow user-defined ID
     name = fields.Str(required=True, validate=validate.Length(min=1, max=200))
     nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
