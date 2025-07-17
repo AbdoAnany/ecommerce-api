@@ -94,7 +94,7 @@ class Tag(db.Model):
         return f'<Tag {self.name}>'
 
 class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(200), nullable=False)
     nameAr=db.Column(db.String(200), nullable=True)
     description = db.Column(db.Text)
