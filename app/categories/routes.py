@@ -199,6 +199,7 @@ def create_category():
         is_active=data.get('is_active', True)
     )
         # Include ID if provided (optional)
+    category_fields = {}
     if 'id' in data:
         category_fields['id'] = data['id']
 
