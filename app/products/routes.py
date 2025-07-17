@@ -179,47 +179,49 @@ def create_product():
         data = schema.load(request.get_json())
     except Exception as e:
         return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
-    
+
     # Generate slug if not provided
     if not data.get('slug'):
         data['slug'] = generate_slug(data['name'])
-    
-    # Check if slug already exists
+
+    # Ensure slug is unique
+    base_slug = data['slug']
     existing_product = Product.query.filter_by(slug=data['slug']).first()
-    if existing_product:
-        # Generate unique slug
-        base_slug = data['slug']
-        counter = 1
-        while existing_product:
-            data['slug'] = f"{base_slug}-{counter}"
-            existing_product = Product.query.filter_by(slug=data['slug']).first()
-            counter += 1
-    
+    counter = 1
+    while existing_product:
+        data['slug'] = f"{base_slug}-{counter}"
+        existing_product = Product.query.filter_by(slug=data['slug']).first()
+        counter += 1
+
+    # Optional ID check
+    if 'id' in data:
+        if Product.query.get(data['id']):
+            return jsonify({'error': 'Product ID already exists'}), 400
+
     # Handle tags
     tag_names = data.pop('tags', [])
-    
-    # Create product
+
+    # Create product (with or without ID)
     product = Product(**data)
-    
-    # Add tags
-    if tag_names:
-        for tag_name in tag_names:
-            tag = Tag.query.filter_by(name=tag_name.strip()).first()
-            if not tag:
-                tag = Tag(name=tag_name.strip())
-                db.session.add(tag)
-            product.tags.append(tag)
-    
+
+    # Attach tags
+    for tag_name in tag_names:
+        tag = Tag.query.filter_by(name=tag_name.strip()).first()
+        if not tag:
+            tag = Tag(name=tag_name.strip())
+            db.session.add(tag)
+        product.tags.append(tag)
+
     try:
         db.session.add(product)
         db.session.commit()
-        
-        schema = ProductDetailSchema()
+
+        detail_schema = ProductDetailSchema()
         return jsonify({
             'message': 'Product created successfully',
-            'data': schema.dump(product)
+            'data': detail_schema.dump(product)
         }), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to create product', 'details': str(e)}), 500
