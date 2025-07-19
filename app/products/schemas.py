@@ -1,11 +1,11 @@
 from marshmallow import Schema, fields, validate, validates, ValidationError
 from app.models import Product
+from marshmallow import Schema, fields, validate
+
 class ProductImageSchema(Schema):
-    id = fields.Int()
-    url = fields.Str()
-    alt_text = fields.Str()
-    is_primary = fields.Bool()
-    sort_order = fields.Int()
+    url = fields.Str(required=True, validate=validate.Length(min=1))
+    alt = fields.Str(required=False)
+
 
 class ProductCreateSchema(Schema):
     id = fields.Int(required=False)  # ✅ Add this line to allow user-defined ID
