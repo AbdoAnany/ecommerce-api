@@ -253,7 +253,8 @@ def update_product(product_id):
     
     # Handle tags
     tag_names = data.pop('tags', None)
-    
+    images_data = data.pop('images', None)
+
     # Update product fields
     for field, value in data.items():
         if hasattr(product, field):
@@ -268,7 +269,13 @@ def update_product(product_id):
                 tag = Tag(name=tag_name.strip())
                 db.session.add(tag)
             product.tags.append(tag)
-    
+    if images_data is not None:
+        # Delete old images
+        product.images.clear()
+        for img in images_data:
+            new_image = Image(url=img['url'], alt=img.get('alt', ''))
+            product.images.append(new_image)
+
     product.updated_at = datetime.now(timezone.utc)
     
     try:
