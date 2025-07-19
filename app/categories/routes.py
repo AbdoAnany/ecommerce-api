@@ -305,31 +305,55 @@ def update_category(category_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to update category', 'details': str(e)}), 500
 
+from flask import request
+
 @bp.route('/<int:category_id>', methods=['DELETE'])
 @jwt_required()
 @require_admin()
 def delete_category(category_id):
-    """Delete category (Admin only) - Soft delete"""
+    """Delete category (Admin only) - Soft or Hard based on query param ?hard=true"""
     category = Category.query.get(category_id)
-    
+
     if not category:
         return jsonify({'error': 'Category not found'}), 404
-    
-    # Check if category has products
-    if category.products:
-        return jsonify({'error': 'Cannot delete category with products. Move products first.'}), 400
-    
-    # Check if category has child categories
-    if category.children:
-        return jsonify({'error': 'Cannot delete category with subcategories. Delete subcategories first.'}), 400
-    
-    # Soft delete - set as inactive
-    category.is_active = False
-    category.updated_at = datetime.now(timezone.utc)
-    
+
+    # Parse the ?hard=true query param
+    hard_delete = request.args.get('hard', 'false').lower() == 'true'
+
     try:
+        if hard_delete:
+            # HARD DELETE logic
+            # Recursively delete children and their products
+            def delete_children(cat):
+                for child in cat.children:
+                    delete_children(child)
+                    for product in child.products:
+                        db.session.delete(product)
+                    db.session.delete(child)
+
+            delete_children(category)
+
+            # Delete products of this category
+            for product in category.products:
+                db.session.delete(product)
+
+            # Finally, delete the category
+            db.session.delete(category)
+
+        else:
+            # SOFT DELETE logic
+            if category.products:
+                return jsonify({'error': 'Cannot soft delete category with products. Move or delete products first.'}), 400
+
+            if category.children:
+                return jsonify({'error': 'Cannot soft delete category with subcategories. Delete subcategories first.'}), 400
+
+            category.is_active = False
+            category.updated_at = datetime.now(timezone.utc)
+
         db.session.commit()
-        return jsonify({'message': 'Category deleted successfully'}), 200
+        return jsonify({'message': f'Category {"hard" if hard_delete else "soft"} deleted successfully'}), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete category', 'details': str(e)}), 500
