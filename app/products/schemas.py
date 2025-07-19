@@ -6,6 +6,8 @@ class ProductCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=200))
     nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
+    images = fields.Nested(ProductImageSchema, many=True)  # 👈 Add this line
+
     descriptionAr = fields.Str()
     short_description = fields.Str(validate=validate.Length(max=500))
     short_descriptionAr = fields.Str(validate=validate.Length(max=500))
@@ -38,6 +40,8 @@ class ProductUpdateSchema(Schema):
     nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
     descriptionAr = fields.Str()
+    images = fields.Nested(ProductImageSchema, many=True)  # 👈 Add this line
+
     short_description = fields.Str(validate=validate.Length(max=500))
     short_descriptionAr = fields.Str(validate=validate.Length(max=500))
     sku = fields.Str(validate=validate.Length(min=1, max=100))
