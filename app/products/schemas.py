@@ -1,5 +1,11 @@
 from marshmallow import Schema, fields, validate, validates, ValidationError
 from app.models import Product
+class ProductImageSchema(Schema):
+    id = fields.Int()
+    url = fields.Str()
+    alt_text = fields.Str()
+    is_primary = fields.Bool()
+    sort_order = fields.Int()
 
 class ProductCreateSchema(Schema):
     id = fields.Int(required=False)  # ✅ Add this line to allow user-defined ID
@@ -69,12 +75,6 @@ class ProductUpdateSchema(Schema):
         if existing_product and existing_product.id != product_id:
             raise ValidationError('SKU already exists.')
 
-class ProductImageSchema(Schema):
-    id = fields.Int()
-    url = fields.Str()
-    alt_text = fields.Str()
-    is_primary = fields.Bool()
-    sort_order = fields.Int()
 
 class ProductTagSchema(Schema):
     id = fields.Int()
