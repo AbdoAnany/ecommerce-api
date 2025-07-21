@@ -31,6 +31,7 @@ def get_cart():
                 'product': {
                     'id': item.product.id,
                     'name': item.product.name,
+                    'nameAr': item.product.nameAr,
                     'sku': item.product.sku,
                     'price': float(item.product.price),
                     'stock_quantity': item.product.stock_quantity,
