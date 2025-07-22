@@ -26,7 +26,7 @@ class Config:
     
     # Pagination
     DEFAULT_PAGE_SIZE = int(os.environ.get('DEFAULT_PAGE_SIZE', 20))
-    MAX_PAGE_SIZE = int(os.environ.get('MAX_PAGE_SIZE', 100))
+    MAX_PAGE_SIZE = int(os.environ.get('MAX_PAGE_SIZE', 30000))
     
     # Currency
     DEFAULT_CURRENCY = os.environ.get('DEFAULT_CURRENCY', 'USD')
