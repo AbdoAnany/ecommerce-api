@@ -7,7 +7,7 @@ from app.products.schemas import (
     ProductCreateSchema, ProductUpdateSchema,
     ProductListSchema, ProductDetailSchema
 )
-from app.models import Product, Category, Tag, User, UserRole, Image
+from app.models import Product, Category, Tag, User, UserRole, ProductImage
 from app import db
 import re
 
