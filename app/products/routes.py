@@ -11,6 +11,9 @@ from app.models import Product, Category, Tag, User, UserRole, Image
 from app import db
 import re
 
+
+# ----------------- Helpers -----------------
+
 def require_admin():
     def decorator(f):
         def wrapper(*args, **kwargs):
@@ -29,11 +32,13 @@ def generate_slug(text):
     slug = re.sub(r'[\s_-]+', '-', slug).lower()
     return slug
 
+
 def build_product_query(args):
     query = Product.query.filter_by(is_active=True)
 
     search = args.get('search', '').strip()
     category_id = args.get('category_id', type=int)
+    subcategory_id = args.get('subcategory_id', type=int)
     min_price = args.get('min_price', type=float)
     max_price = args.get('max_price', type=float)
     in_stock = args.get('in_stock', type=bool)
@@ -42,17 +47,20 @@ def build_product_query(args):
 
     if search:
         query = query.filter(or_(
-            Product.name.contains(search),
-            Product.nameAr.contains(search),
-            Product.description.contains(search),
-            Product.descriptionAr.contains(search),
-            Product.short_description.contains(search),
-            Product.short_descriptionAr.contains(search),
-            Product.sku.contains(search)
+            Product.name.ilike(f"%{search}%"),
+            Product.nameAr.ilike(f"%{search}%"),
+            Product.description.ilike(f"%{search}%"),
+            Product.descriptionAr.ilike(f"%{search}%"),
+            Product.short_description.ilike(f"%{search}%"),
+            Product.short_descriptionAr.ilike(f"%{search}%"),
+            Product.sku.ilike(f"%{search}%")
         ))
 
     if category_id:
-        query = query.filter_by(category_id=category_id)
+        query = query.filter(Product.category_id == category_id)
+
+    if subcategory_id:
+        query = query.filter(Product.subcategory_id == subcategory_id)
 
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
@@ -63,7 +71,7 @@ def build_product_query(args):
         query = query.filter(Product.stock_quantity > 0 if in_stock else Product.stock_quantity == 0)
 
     if featured is not None:
-        query = query.filter_by(is_featured=featured)
+        query = query.filter(Product.is_featured == featured)
 
     if tags and tags[0]:
         for tag in tags:
@@ -71,25 +79,31 @@ def build_product_query(args):
 
     return query
 
+
+# ----------------- Routes -----------------
+
 @bp.route('', methods=['GET'])
 def get_products():
-    page = request.args.get('page', 1, type=int)
+    args = request.args
+    page = args.get('page', 1, type=int)
     per_page = min(
-        request.args.get('per_page', current_app.config['DEFAULT_PAGE_SIZE'], type=int),
+        args.get('per_page', current_app.config['DEFAULT_PAGE_SIZE'], type=int),
         current_app.config['MAX_PAGE_SIZE']
     )
+    sort_by = args.get('sort_by', 'created_at')
+    sort_order = args.get('sort_order', 'desc')
 
-    sort_by = request.args.get('sort_by', 'created_at')
-    sort_order = request.args.get('sort_order', 'desc')
+    query = build_product_query(args)
 
-    query = build_product_query(request.args)
+    sort_column = {
+        'price': Product.price,
+        'name': Product.name,
+        'created_at': Product.created_at
+    }.get(sort_by, Product.created_at)
 
-    if sort_by == 'price':
-        query = query.order_by(Product.price.desc() if sort_order == 'desc' else Product.price.asc())
-    elif sort_by == 'name':
-        query = query.order_by(Product.name.desc() if sort_order == 'desc' else Product.name.asc())
-    else:
-        query = query.order_by(Product.created_at.desc() if sort_order == 'desc' else Product.created_at.asc())
+    query = query.order_by(
+        sort_column.desc() if sort_order == 'desc' else sort_column.asc()
+    )
 
     products = query.paginate(page=page, per_page=per_page, error_out=False)
     schema = ProductListSchema()
@@ -105,22 +119,33 @@ def get_products():
             'has_next': products.has_next,
             'has_prev': products.has_prev
         },
-        'filters': {key: request.args.get(key) for key in [
-            'search', 'category_id', 'min_price', 'max_price', 'in_stock', 'featured', 'tags'
-        ]}
+        'filters': {
+            key: args.get(key)
+            for key in [
+                'search', 'category_id', 'subcategory_id',
+                'min_price', 'max_price', 'in_stock', 'featured', 'tags'
+            ]
+        }
     }), 200
 
-@bp.route('/category/<int:category_id>', methods=['GET'])
-def get_products_by_category(category_id):
-    args = request.args.to_dict(flat=True)
-    args['category_id'] = category_id
-    return get_products()
 
-@bp.route('/featured', methods=['GET'])
-def get_featured_products():
-    args = request.args.to_dict(flat=True)
-    args['featured'] = 'true'
-    return get_products()
+@bp.route('/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    product = Product.query.filter_by(id=product_id, is_active=True).first()
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+    schema = ProductDetailSchema()
+    return jsonify({'message': 'Product retrieved successfully', 'data': schema.dump(product)}), 200
+
+
+@bp.route('/slug/<slug>', methods=['GET'])
+def get_product_by_slug(slug):
+    product = Product.query.filter_by(slug=slug, is_active=True).first()
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+    schema = ProductDetailSchema()
+    return jsonify({'message': 'Product retrieved successfully', 'data': schema.dump(product)}), 200
+
 
 @bp.route('/search', methods=['GET'])
 def search_products():
@@ -129,14 +154,14 @@ def search_products():
         return jsonify({'error': 'Search query is required'}), 400
 
     search_filter = or_(
-        Product.name.contains(query_text),
-        Product.nameAr.contains(query_text),
-        Product.description.contains(query_text),
-        Product.descriptionAr.contains(query_text),
-        Product.short_description.contains(query_text),
-        Product.short_descriptionAr.contains(query_text),
-        Product.sku.contains(query_text),
-        Product.tags.any(Tag.name.contains(query_text))
+        Product.name.ilike(f"%{query_text}%"),
+        Product.nameAr.ilike(f"%{query_text}%"),
+        Product.description.ilike(f"%{query_text}%"),
+        Product.descriptionAr.ilike(f"%{query_text}%"),
+        Product.short_description.ilike(f"%{query_text}%"),
+        Product.short_descriptionAr.ilike(f"%{query_text}%"),
+        Product.sku.ilike(f"%{query_text}%"),
+        Product.tags.any(Tag.name.ilike(f"%{query_text}%"))
     )
 
     products = Product.query.filter(
@@ -151,21 +176,6 @@ def search_products():
         'count': len(products)
     }), 200
 
-@bp.route('/<int:product_id>', methods=['GET'])
-def get_product(product_id):
-    product = Product.query.filter_by(id=product_id, is_active=True).first()
-    if not product:
-        return jsonify({'error': 'Product not found'}), 404
-    schema = ProductDetailSchema()
-    return jsonify({'message': 'Product retrieved successfully', 'data': schema.dump(product)}), 200
-
-@bp.route('/slug/<slug>', methods=['GET'])
-def get_product_by_slug(slug):
-    product = Product.query.filter_by(slug=slug, is_active=True).first()
-    if not product:
-        return jsonify({'error': 'Product not found'}), 404
-    schema = ProductDetailSchema()
-    return jsonify({'message': 'Product retrieved successfully', 'data': schema.dump(product)}), 200
 
 @bp.route('', methods=['POST'])
 @jwt_required()
@@ -202,11 +212,12 @@ def create_product():
     try:
         db.session.add(product)
         db.session.commit()
-        detail_schema = ProductDetailSchema()
-        return jsonify({'message': 'Product created successfully', 'data': detail_schema.dump(product)}), 201
+        schema = ProductDetailSchema()
+        return jsonify({'message': 'Product created successfully', 'data': schema.dump(product)}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to create product', 'details': str(e)}), 500
+
 
 @bp.route('/<int:product_id>', methods=['PUT'])
 @jwt_required()
@@ -259,6 +270,7 @@ def update_product(product_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to update product', 'details': str(e)}), 500
 
+
 @bp.route('/<int:product_id>', methods=['DELETE'])
 @jwt_required()
 @require_admin()
@@ -276,6 +288,7 @@ def delete_product(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete product', 'details': str(e)}), 500
+
 
 @bp.route('/<int:product_id>/stock', methods=['PUT'])
 @jwt_required()
