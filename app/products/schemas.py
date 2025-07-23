@@ -12,7 +12,7 @@ class ProductCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=200))
     nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
-    images = fields.List(fields.Nested(ProductImageSchema))
+    images = fields.List(fields.Str())
 
     descriptionAr = fields.Str()
     short_description = fields.Str(validate=validate.Length(max=500))
@@ -46,7 +46,7 @@ class ProductUpdateSchema(Schema):
     nameAr = fields.Str(validate=validate.Length(min=1, max=200))
     description = fields.Str()
     descriptionAr = fields.Str()
-    images = fields.List(fields.Nested(ProductImageSchema))
+    images =fields.List(fields.Str())
 
     short_description = fields.Str(validate=validate.Length(max=500))
     short_descriptionAr = fields.Str(validate=validate.Length(max=500))
@@ -99,6 +99,7 @@ class ProductListSchema(Schema):
     main_image = fields.Method('get_main_image')
     category = fields.Method('get_category')
     tags = fields.Nested(ProductTagSchema, many=True)
+    images = fields.Nested(ProductImageSchema, many=True)
     average_rating = fields.Method('get_average_rating')
     review_count = fields.Method('get_review_count')
     created_at = fields.DateTime()
