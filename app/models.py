@@ -152,9 +152,9 @@ class ProductImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     url = db.Column(db.String(255), nullable=False)
-    alt_text = db.Column(db.String(200))
-    is_primary = db.Column(db.Boolean, default=False, nullable=False)
-    sort_order = db.Column(db.Integer, default=0)
+    alt = db.Column(db.String(200))
+    # is_primary = db.Column(db.Boolean, default=False, nullable=False)
+    # sort_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
