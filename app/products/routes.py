@@ -208,9 +208,9 @@ def create_product():
             tag = Tag(name=tag_name.strip())
             db.session.add(tag)
         product.tags.append(tag)
-    images_data = data.pop('images', None)
-    if images_data is not None:
-        product.images.clear()
+    images_data = data.pop('images', [])
+    
+    product.images.clear()
     for img in images_data:
         new_image = ProductImage(url=img['url'], alt=img.get('alt', ''))
         product.images.append(new_image)
