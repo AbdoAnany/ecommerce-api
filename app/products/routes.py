@@ -5,7 +5,7 @@ from sqlalchemy import or_, and_
 from app.products import bp
 from app.products.schemas import (
     ProductCreateSchema, ProductUpdateSchema,
-    ProductListSchema, ProductDetailSchema
+    ProductListSchema, ProductDetailSchema,ProductImageSchema
 )
 from app.models import Product, Category, Tag, User, UserRole, ProductImage
 from app import db
@@ -208,6 +208,12 @@ def create_product():
             tag = Tag(name=tag_name.strip())
             db.session.add(tag)
         product.tags.append(tag)
+    images_data = data.pop('images', None)
+    if images_data is not None:
+        product.images.clear()
+        for img in images_data:
+            new_image = ProductImageSchema(url=img['url'], alt=img.get('alt', ''))
+            product.images.append(new_image)
 
     try:
         db.session.add(product)
@@ -257,7 +263,7 @@ def update_product(product_id):
     if images_data is not None:
         product.images.clear()
         for img in images_data:
-            new_image = Image(url=img['url'], alt=img.get('alt', ''))
+            new_image = ProductImageSchema(url=img['url'], alt=img.get('alt', ''))
             product.images.append(new_image)
 
     product.updated_at = datetime.now(timezone.utc)
