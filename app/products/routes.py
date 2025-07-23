@@ -211,9 +211,10 @@ def create_product():
     images_data = data.pop('images', None)
     if images_data is not None:
         product.images.clear()
-        for img in images_data:
-            new_image = ProductImageSchema(url=img['url'], alt=img.get('alt', ''))
-            product.images.append(new_image)
+    for img in images_data:
+        new_image = ProductImage(url=img['url'], alt=img.get('alt', ''))
+        product.images.append(new_image)
+
 
     try:
         db.session.add(product)
@@ -263,8 +264,9 @@ def update_product(product_id):
     if images_data is not None:
         product.images.clear()
         for img in images_data:
-            new_image = ProductImageSchema(url=img['url'], alt=img.get('alt', ''))
+            new_image = ProductImage(url=img['url'], alt=img.get('alt', ''))
             product.images.append(new_image)
+
 
     product.updated_at = datetime.now(timezone.utc)
 
